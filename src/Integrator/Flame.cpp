@@ -6,6 +6,7 @@
 #include "IC/Constant.H"
 #include "IC/PSRead.H"
 #include "IC/Expression.H"
+#include "IC/Random.H"
 #include "Base/Mechanics.H"
 
 #include <cmath>
@@ -45,6 +46,11 @@ Flame::Parse(Flame& value, IO::ParmParse& pp)
 
         value.RegisterNewFab(value.eta_mf, value.bc_eta, 1, 2, "eta", true);
         value.RegisterNewFab(value.eta_old_mf, value.bc_eta, 1, 2, "eta_old", false);
+        value.RegisterNewFab(value.al_mf,value.bc_eta,1,2,"al",true);
+        value.RegisterNewFab(value.al_old_mf,value.bc_eta,1,2,"al_old",false);
+        
+        value.ic_al = new IC::Constant(value.geom,pp,"al.ic.constant");
+        pp.query("pf.al_L",value.pf.L_al);
     }
 
     {
@@ -128,6 +134,8 @@ void Flame::Initialize(int lev)
 
     ic_phi->Initialize(lev, phi_mf);
 
+    ic_al->Initialize(lev,al_mf);
+    ic_al->Initialize(lev,al_old_mf);
 }
 
 void Flame::UpdateModel(int /*a_step*/)
@@ -198,6 +206,8 @@ void Flame::Advance(int lev, Set::Scalar time, Set::Scalar dt)
     if (lev == finest_level)
     {
         std::swap(eta_old_mf[lev], eta_mf[lev]);
+        std::swap(al_old_mf[lev], al_mf[lev]);
+
 
         Set::Scalar
             a0 = pf.w0,
@@ -213,6 +223,9 @@ void Flame::Advance(int lev, Set::Scalar time, Set::Scalar dt)
             amrex::Array4<Set::Scalar> const& eta = (*eta_mf[lev]).array(mfi);
             amrex::Array4<const Set::Scalar> const& eta_old = (*eta_old_mf[lev]).array(mfi);
             amrex::Array4<const Set::Scalar> const& phi = (*phi_mf[lev]).array(mfi);
+
+            amrex::Array4<Set::Scalar> const& al = (*al_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& al_old = (*al_old_mf[lev]).array(mfi);
 
             Set::Scalar fmod_ap = pf.r_ap * pow(pf.P, pf.n_ap);
             Set::Scalar fmod_htpb = pf.r_htpb * pow(pf.P, pf.n_htpb);
@@ -238,6 +251,19 @@ void Flame::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                         - pf.eps * pf.kappa * eta_lap);
 
                 if (eta(i, j, k) > eta_old(i, j, k)) eta(i, j, k) = eta_old(i, j, k);
+                
+                // Aluminum evolution
+                //if (phi(i,j,k) > 0.5) {
+                //    al_old(i,j,k) = 0.0;
+                //    al(i,j,k) = 0.0;
+                //}
+                Set::Scalar al_lap = Numeric::Laplacian(al_old, i, j, k, 0, DX);
+                if (phi(i,j,k) < 0.5)
+                    al(i, j, k) =
+                        al_old(i, j, k)
+                        - pf.L_al * dt * (
+                            (pf.lambda / pf.eps) * (a1 + 2.0 * a2 * al_old(i, j, k) + 3.0 * a3 * al_old(i, j, k) * al_old(i, j, k) + 4 * a4 * al_old(i, j, k) * al_old(i, j, k) * al_old(i, j, k))
+                            - pf.eps * pf.kappa * al_lap);
             });
         }
     }
@@ -312,12 +338,18 @@ void Flame::TagCellsForRefinement(int lev, amrex::TagBoxArray& a_tags, Set::Scal
         const amrex::Box& bx = mfi.tilebox();
         amrex::Array4<char> const& tags = a_tags.array(mfi);
         amrex::Array4<const Set::Scalar> const& Eta = (*eta_mf[lev]).array(mfi);
+        amrex::Array4<const amrex::Real> const &al = (*al_mf[lev]).array(mfi);
 
         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
             Set::Vector gradeta = Numeric::Gradient(Eta, i, j, k, 0, DX);
+            Set::Vector al_grad = Numeric::Gradient(al, i, j, k, 0, DX);
             if (gradeta.lpNorm<2>() * dr * 2 > m_refinement_criterion)
                 tags(i, j, k) = amrex::TagBox::SET;
+
+            if (Eta(i,j,k) < 0.1 && (dr*al_grad.lpNorm<2>() > m_refinement_criterion))
+                tags(i, j, k) = amrex::TagBox::SET;
+
         });
     }
 
@@ -345,9 +377,36 @@ void Flame::TagCellsForRefinement(int lev, amrex::TagBoxArray& a_tags, Set::Scal
 void Flame::Regrid(int lev, Set::Scalar /* time */)
 {
     BL_PROFILE("Integrator::Flame::Regrid");
+
+    for (amrex::MFIter mfi(*eta_mf[lev], true); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box& bx = mfi.tilebox();
+        amrex::Array4<Set::Scalar> const& eta = (*eta_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& phi = (*phi_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& al = (*al_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& al_old = (*al_old_mf[lev]).array(mfi);
+        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+        {
+            if (eta(i,j,k) > 0.5)
+            {
+                if (phi(i,j,k)>0.001)
+                {
+                    al(i,j,k) = 0.0;
+                    al_old(i,j,k) = 0.0;
+                }
+                else
+                {
+                    al(i,j,k) = 0.5;
+                    al_old(i,j,k) = 0.5;
+                }
+            }
+        });
+    }
+    
     if (lev < finest_level) return;
     phi_mf[lev]->setVal(0.0);
     ic_phi->Initialize(lev, phi_mf);
+    
     Util::Message(INFO, "Regridding on level ", lev);
 }
 

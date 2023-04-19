@@ -55,7 +55,8 @@ private:
     Set::Field<Set::Scalar> eta_old_mf;
     Set::Field<Set::Scalar> phi_mf;
     Set::Field<Set::Scalar> field;
-    Set::Field<Set::Scalar> alpha_mf;
+    Set::Field<Set::Scalar> al_mf;
+    Set::Field<Set::Scalar> al_old_mf;
 
     Set::Field<Set::Scalar> deta_mf;
     Set::Field<Set::Scalar> qgrid_mf;
@@ -64,6 +65,7 @@ private:
     BC::BC<Set::Scalar>* bc_eta;
     IC::IC* ic_eta;
     IC::IC* ic_phi;
+    IC::IC* ic_al;
 
     int fs_number = 1;
 
@@ -85,6 +87,7 @@ private:
         Set::Scalar n_htpb = 0.0;
         Set::Scalar r_comb = 0.0;
         Set::Scalar n_comb = 0.0;
+        Set::Scalar L_al = 1.0;
     } pf;
 
     struct {
