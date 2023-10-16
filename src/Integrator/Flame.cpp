@@ -6,6 +6,7 @@
 #include "IC/Constant.H"
 #include "IC/PSRead.H"
 #include "IC/Expression.H"
+#include "IC/Random.H"
 #include "Base/Mechanics.H"
 
 #include <cmath>
@@ -45,6 +46,11 @@ Flame::Parse(Flame& value, IO::ParmParse& pp)
 
         value.RegisterNewFab(value.eta_mf, value.bc_eta, 1, 2, "eta", true);
         value.RegisterNewFab(value.eta_old_mf, value.bc_eta, 1, 2, "eta_old", false);
+
+        value.bc_alpha = new BC::Constant(1);
+        pp.queryclass("pf.alpha.bc", *static_cast<BC::Constant*>(value.bc_alpha)); // See :ref:`BC::Constant`
+        value.RegisterNewFab(value.alpha_mf, value.bc_alpha, 1, 2, "alpha", true);
+        value.RegisterNewFab(value.alpha_old_mf, value.bc_alpha, 1, 2, "alpha_old", false);
     }
 
     {
@@ -54,6 +60,24 @@ Flame::Parse(Flame& value, IO::ParmParse& pp)
         if (type == "constant") value.ic_eta = new IC::Constant(value.geom, pp, "eta.ic.constant");
         else if (type == "expression") value.ic_eta = new IC::Expression(value.geom, pp, "eta.ic.expression");
         else Util::Abort(INFO, "Invalid eta.ic ", type);
+    }
+
+    {
+        pp.query("metal.chempot",value.metal.chempot);
+        pp.query("metal.grad",value.metal.grad);
+        pp.query("metal.L",value.metal.L);
+        pp.query("metal.eps",value.metal.eps);
+    }
+
+
+    {
+        // Read in parameters to determine the IC for eta
+        std::string type = "constant";
+        pp.query("alpha.ic.type", type); // IC type - [packedspheres,laminate] - see classes for more information
+        if (type == "constant") value.ic_alpha = new IC::Constant(value.geom, pp, "alpha.ic.constant");
+        else if (type == "expression") value.ic_alpha = new IC::Expression(value.geom, pp, "alpha.ic.expression");
+        else if (type == "random") value.ic_alpha = new IC::Random(value.geom, pp, "alpha.ic.random");
+        else Util::Abort(INFO, "Invalid alpha.ic ", type);
     }
 
     {
@@ -126,6 +150,9 @@ void Flame::Initialize(int lev)
     ic_eta->Initialize(lev, eta_mf);
     ic_eta->Initialize(lev, eta_old_mf);
 
+    ic_alpha->Initialize(lev, alpha_mf);
+    ic_alpha->Initialize(lev, alpha_old_mf);
+
     ic_phi->Initialize(lev, phi_mf);
 
 }
@@ -190,6 +217,7 @@ void Flame::Advance(int lev, Set::Scalar time, Set::Scalar dt)
 {
     const amrex::Real* DX = geom[lev].CellSize();
 
+    
 
     //
     // Phase field evolution
@@ -197,7 +225,7 @@ void Flame::Advance(int lev, Set::Scalar time, Set::Scalar dt)
 
     if (lev == finest_level)
     {
-        std::swap(eta_old_mf[lev], eta_mf[lev]);
+        std::swap(eta_old_mf[lev], eta_mf[lev]);    
 
         Set::Scalar
             a0 = pf.w0,
@@ -240,6 +268,32 @@ void Flame::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 if (eta(i, j, k) > eta_old(i, j, k)) eta(i, j, k) = eta_old(i, j, k);
             });
         }
+    }
+        
+    std::swap(alpha_old_mf[lev], alpha_mf[lev]);
+    // Evolve alpha
+    for (amrex::MFIter mfi(*eta_mf[lev], true); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box& bx = mfi.tilebox();
+        amrex::Array4<Set::Scalar> const& eta = (*eta_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& alpha_new = (*alpha_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& alpha = (*alpha_old_mf[lev]).array(mfi);
+
+        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+        {
+                Set::Scalar L = metal.L*(1.0 - eta(i,j,k))*(1.0 - eta(i,j,k))*(1.0 - eta(i,j,k))*(1.0 - eta(i,j,k));
+                Set::Scalar driving_force = 0.0;
+                // Chemical potential
+                Set::Scalar alpha_2 = alpha(i,j,k)*alpha(i,j,k);
+                Set::Scalar alpha_3 = alpha_2*alpha(i,j,k);
+                //Set::Scalar alpha_4 = alpha_3*alpha(i,j,k);
+                driving_force += (metal.chempot/metal.eps) * (2.0*alpha(i,j,k) - 6.0*alpha_2 + 4.0*alpha_3);
+                // Gradient
+                Set::Scalar alpha_lap = Numeric::Laplacian(alpha, i, j, k, 0, DX);
+                driving_force -= metal.eps * metal.grad * alpha_lap;
+                alpha_new(i, j, k) =
+                    alpha(i, j, k) - L * dt * driving_force;
+        });
     }
 
     //

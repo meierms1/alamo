@@ -6,6 +6,7 @@
 #include "IC/IC.H"
 #include "Util/Util.H"
 #include "Set/Set.H"
+#include "IO/ParmParse.H"
 
 namespace IC
 {
@@ -17,6 +18,11 @@ public:
         IC(_geom), mult(a_mult)
     {}
   
+    Random(amrex::Vector<amrex::Geometry>& _geom, IO::ParmParse& pp, std::string name): IC(_geom)
+    {
+        pp.queryclass(name, *this);
+    }
+
     void Add(const int &lev, Set::Field<Set::Scalar> &field, Set::Scalar)
     {
         for (amrex::MFIter mfi(*field[lev],true); mfi.isValid(); ++mfi)
@@ -29,14 +35,23 @@ public:
                     for (int j = box.loVect()[1]-field[lev]->nGrow(); j<=box.hiVect()[1]+field[lev]->nGrow(); j++),
                     for (int k = box.loVect()[2]-field[lev]->nGrow(); k<=box.hiVect()[2]+field[lev]->nGrow(); k++))
             {
-                field_box(amrex::IntVect(AMREX_D_DECL(i,j,k)),comp) += mult * Util::Random();
+                field_box(amrex::IntVect(AMREX_D_DECL(i,j,k)),comp) += off + mult * Util::Random();
             }
         }
 
     };
     using IC::Add;
+
+    static void Parse(Random& value, IO::ParmParse& pp)
+    {
+        pp.query("mult", value.mult); 
+        pp.query("off",  value.off); 
+    }
+    
+    
+    
 private:
-    Set::Scalar mult;
+    Set::Scalar mult=1.0, off=0.0;
 
 };
 }

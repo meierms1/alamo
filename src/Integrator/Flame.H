@@ -56,13 +56,16 @@ private:
     Set::Field<Set::Scalar> phi_mf;
     Set::Field<Set::Scalar> field;
     Set::Field<Set::Scalar> alpha_mf;
+    Set::Field<Set::Scalar> alpha_old_mf;
 
     Set::Field<Set::Scalar> deta_mf;
     Set::Field<Set::Scalar> qgrid_mf;
 
     BC::BC<Set::Scalar>* bc_temp;
     BC::BC<Set::Scalar>* bc_eta;
+    BC::BC<Set::Scalar>* bc_alpha;
     IC::IC* ic_eta;
+    IC::IC* ic_alpha;
     IC::IC* ic_phi;
 
     Set::Scalar m_refinement_criterion = 0.001;
@@ -96,6 +99,13 @@ private:
     struct {
         Model::Solid::Affine::Isotropic model_ap, model_htpb;
     } elastic;
+
+    struct {
+        Set::Scalar chempot = 1.0;
+        Set::Scalar grad = 1.0;
+        Set::Scalar L = 1.0;
+        Set::Scalar eps = 1.0;
+    } metal;
 
 
     // Integrated variables
