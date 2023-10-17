@@ -67,6 +67,11 @@ Flame::Parse(Flame& value, IO::ParmParse& pp)
         pp.query("metal.grad",value.metal.grad);
         pp.query("metal.L",value.metal.L);
         pp.query("metal.eps",value.metal.eps);
+        pp.query("metal.stochastic",value.metal.stochastic);
+        pp.query("metal.V0",value.metal.V0);
+        pp.query("metal.lambda",value.metal.lambda);
+
+        value.RegisterIntegratedVariable(&value.metal.V, "metalV");
     }
 
 
@@ -291,6 +296,13 @@ void Flame::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 // Gradient
                 Set::Scalar alpha_lap = Numeric::Laplacian(alpha, i, j, k, 0, DX);
                 driving_force -= metal.eps * metal.grad * alpha_lap;
+
+                // Lagrange multiplier
+                driving_force += metal.lambda * (metal.V - metal.V0);                
+                
+                // Stochastic
+                driving_force += (Util::Random() - 0.5) * metal.stochastic;
+                
                 alpha_new(i, j, k) =
                     alpha(i, j, k) - L * dt * driving_force;
         });
@@ -375,6 +387,21 @@ void Flame::TagCellsForRefinement(int lev, amrex::TagBoxArray& a_tags, Set::Scal
         });
     }
 
+    // alpha criterion for refinement
+    for (amrex::MFIter mfi(*eta_mf[lev], true); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box& bx = mfi.tilebox();
+        amrex::Array4<char> const& tags = a_tags.array(mfi);
+        amrex::Array4<const Set::Scalar> const& alpha = (*alpha_mf[lev]).array(mfi);
+
+        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+        {
+            Set::Vector gradalpha = Numeric::Gradient(alpha, i, j, k, 0, DX);
+            if (gradalpha.lpNorm<2>() * dr * 2 > m_refinement_criterion)
+                tags(i, j, k) = amrex::TagBox::SET;
+        });
+    }
+
     // Thermal criterion for refinement
 
     if (thermal.on)
@@ -412,6 +439,7 @@ void Flame::Integrate(int amrlev, Set::Scalar /*time*/, int /*step*/,
     const Set::Scalar* DX = geom[amrlev].CellSize();
     Set::Scalar dv = AMREX_D_TERM(DX[0], *DX[1], *DX[2]);
     amrex::Array4<amrex::Real> const& eta = (*eta_mf[amrlev]).array(mfi);
+    amrex::Array4<amrex::Real> const& alpha = (*alpha_mf[amrlev]).array(mfi);
     amrex::ParallelFor(box, [=] AMREX_GPU_DEVICE(int i, int j, int k)
     {
         volume += eta(i, j, k, 0) * dv;
@@ -419,6 +447,8 @@ void Flame::Integrate(int amrlev, Set::Scalar /*time*/, int /*step*/,
         Set::Scalar normgrad = grad.lpNorm<2>();
         Set::Scalar da = normgrad * dv;
         area += da;
+
+        metal.V += alpha(i,j,k,0) * dv;
     });
 }
 

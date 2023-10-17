@@ -105,6 +105,11 @@ private:
         Set::Scalar grad = 1.0;
         Set::Scalar L = 1.0;
         Set::Scalar eps = 1.0;
+        Set::Scalar stochastic = 0.0;
+        Set::Scalar V0 = 0.0;
+        Set::Scalar lambda = 0.0;
+        
+        Set::Scalar V = 0.0;
     } metal;
 
 
