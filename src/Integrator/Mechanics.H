@@ -82,8 +82,10 @@
 #include "IC/Constant.H"
 #include "IC/Expression.H"
 #include "IC/BMP.H"
+#include "IC/EulerAngles.H"     //newly added line 
 #include "BC/Constant.H"
 #include "Numeric/Stencil.H"
+
 
 #include "Model/Solid/Solid.H"
 #include "Solver/Nonlocal/Linear.H"
@@ -136,8 +138,9 @@ public:
             if (type == "ellipse")    value.ic_eta = new IC::Ellipse(value.geom, pp, "ic.ellipse");
             else if (type == "voronoi")    value.ic_eta = new IC::Voronoi(value.geom, pp, "ic.voronoi");
             else if (type == "bmp")        value.ic_eta = new IC::BMP(value.geom, pp, "ic.bmp");
+            else if (type == "eulerangles")       value.ic_eta = new IC::EulerAngles(value.geom, pp, "ic.eulerangles");                             //newly added line
             else if (type == "expression") value.ic_eta = new IC::Expression(value.geom, pp, "ic.expression");
-            else Util::Abort(INFO,"Invalid valud for ic.type: ",type);
+            else Util::Abort(INFO,"Invalid value for ic.type: ",type);
             
             value.eta_reset_on_regrid = true;
             // Whether to re-initialize eta when re-gridding occurs.
