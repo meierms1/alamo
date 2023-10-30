@@ -274,24 +274,24 @@ public:
         //value.minB( = (Set::Scalar) value.bmp.min()[value.channel3];
         //value.maxB = (Set::Scalar) value.bmp.max()[value.channel3];
         
-        min[0] = (Set::Scalar) value.bmp.min()[value.channel1];
-        max[0] = (Set::Scalar) value.bmp.max()[value.channel1];
+        value.min[0] = (Set::Scalar) value.bmp.min()[value.channel1];
+        value.max[0] = (Set::Scalar) value.bmp.max()[value.channel1];
 
-        min[1] = (Set::Scalar) value.bmp.min()[value.channel2];
-        max[1] = (Set::Scalar) value.bmp.max()[value.channel2];
+        value.min[1] = (Set::Scalar) value.bmp.min()[value.channel2];
+        value.max[1] = (Set::Scalar) value.bmp.max()[value.channel2];
 
-        min[2] = (Set::Scalar) value.bmp.min()[value.channel3];
-        max[2] = (Set::Scalar) value.bmp.max()[value.channel3];
+        value.min[2] = (Set::Scalar) value.bmp.min()[value.channel3];
+        value.max[2] = (Set::Scalar) value.bmp.max()[value.channel3];
 
         
         //pp.query("min",value.min); // Scaling value - minimum (default: 0.0)
         //pp.query("max",value.max); // Scaling value - maximum (default: 255.0)
-        pp.query("minR",min[0]);
-        pp.query("maxR",max[0]);
-        pp.query("minG",min[1]);
-        pp.query("maxG",max[1]);
-        pp.query("minB",min[2]);
-        pp.query("maxB",max[2]);
+        pp.query("minR",value.min[0]);
+        pp.query("maxR",value.max[0]);
+        pp.query("minG",value.min[1]);
+        pp.query("maxG",value.max[1]);
+        pp.query("minB",value.min[2]);
+        pp.query("maxB",value.max[2]);
 }    
 };
 }
