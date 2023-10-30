@@ -3,17 +3,18 @@ alamo.program.mechanics.model = affine.j2
 plot_file = tests/MicrographPlastic/output
 
 timestep		    = 0.001
-stop_time		    = 1.0
+stop_time		    = 0.2
 
 # amr parameters
-amr.plot_int		    = 10
-amr.max_level		    = 3
+amr.plot_int		    = 1
+amr.thermo.plot_int     = 1
+amr.max_level		    = 4
 amr.n_cell		    = 16 16 16
 amr.blocking_factor	    = 4
 amr.regrid_int		    = 1
 amr.grid_eff		    = 1.0
-amr.node.any = 0
-amr.cell.all = 1
+amr.node.all = 1
+#amr.cell.all = 1
 
 # geometry
 geometry.prob_lo	    = -8 -8 -8 
@@ -25,11 +26,11 @@ nmodels = 2
 
 model1.E = 210 
 model1.nu = 0.3
-model1.sigma0=0.2
+model1.sigma0=1.0
 
 model2.E = 100
 model2.nu = 0.2
-model2.sigma0= 1.0
+model2.sigma0= 0.2
 
 ic.type = bmp
 ic.bmp.filename = tests/MicrographPlastic/SEM3.bmp
@@ -40,11 +41,11 @@ phi.ic.bmp.channel = g
 # solver parameters
 solver.verbose = 3
 solver.nriters = 1
-solver.max_iter = 40
+solver.max_iter = 100
 
 # Elastic refinement criterion
 ref_threshold = 0.0005
 
 bc.type = tension_test
 bc.tension_test.type = uniaxial_stress
-bc.tension_test.disp = (0,0.25:0,0.02)
+bc.tension_test.disp = (0,0.25:0,0.2)
