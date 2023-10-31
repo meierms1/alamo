@@ -28,17 +28,18 @@ geometry.is_periodic	    = 0 0 0
 
 ic.type         = eulerangles
 ic.eulerangles.filename = tests/mechanics_gbvd/images/1_001_00006_AnglesRepair.bmp
+#ic.eulerangles.filename = tests/mechanics_gbvd/interface-blur.bmp
 ic.eulerangles.fit      = fitwidth
 
 
 #Tantalum
-nmodels = 1
+nmodels = 2
 model1.E = 185 #GPa
 model1.nu = 0.35
 #model1.F0 = -0.001 0 0 0 -0.001 0 0 0 -0.001
 #Nickel
-#model2.E = 207 #GPa
-#model2.nu = 0.31
+model2.E = 207 #GPa
+model2.nu = 0.31
 #model2.F0 = 0.001 0 0 0 0.001 0 0 0 0.001
 
 solver.verbose = 3

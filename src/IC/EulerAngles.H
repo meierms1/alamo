@@ -31,14 +31,14 @@ public:
         pp.queryclass(name,*this);
     }
 
-    void Define(std::string eulerfilename)
+    void Define(std::string bmpfilename)
     {
-        bmp.Define(eulerfilename);//"Interface_Blur2.bmp");
+        bmp.Define(bmpfilename);//"Interface_Blur2.bmp");
     }
   
     void Add(const int &lev, Set::Field<Set::Scalar> &a_field, Set::Scalar)
     {        
-        Util::Assert(INFO,TEST(a_field[0]->nComp() == 3));
+        //Util::Assert(INFO,TEST(a_field[0]->nComp() == 3));
         Set::Vector DX(geom[lev].CellSize());
         amrex::Box domain = geom[lev].Domain();
 
@@ -218,11 +218,16 @@ public:
                 //if (field.nComp() > 1) field(i,j,k,1) = 1.0 - field(i,j,k,0);
                 //if (field.nComp() > 1) field(i,j,k,1) = 1.0 - field(i,j,k,0);
                 //if (field.nComp() > 1) field(i,j,k,1) = 1.0 - field(i,j,k,0);
+                //if (field.nComp() > 2) { // Ensuring there are at least 3 channels available
+                //    field(i,j,k,0) = 1.0 - field(i,j,k,0); // Red
+                //    field(i,j,k,1) = 1.0 - field(i,j,k,1); // Green
+                //    field(i,j,k,2) = 1.0 - field(i,j,k,2); // Blue
+                //}
 
             });
         }
         a_field[lev]->FillBoundary();
-        //a_field[lev]->FillBoundary();
+        //a_fieldR[lev]->FillBoundary();
         //a_fieldG[lev]->FillBoundary();
         //a_fieldB[lev]->FillBoundary();
     };
@@ -274,14 +279,14 @@ public:
         //value.minB( = (Set::Scalar) value.bmp.min()[value.channel3];
         //value.maxB = (Set::Scalar) value.bmp.max()[value.channel3];
         
-        min[0] = (Set::Scalar) value.bmp.min()[value.channel1];
-        max[0] = (Set::Scalar) value.bmp.max()[value.channel1];
+        value.min[0] = (Set::Scalar) value.bmp.min()[value.channel1];
+        value.max[0] = (Set::Scalar) value.bmp.max()[value.channel1];
 
-        min[1] = (Set::Scalar) value.bmp.min()[value.channel2];
-        max[1] = (Set::Scalar) value.bmp.max()[value.channel2];
+        value.min[1] = (Set::Scalar) value.bmp.min()[value.channel2];
+        value.max[1] = (Set::Scalar) value.bmp.max()[value.channel2];
 
-        min[2] = (Set::Scalar) value.bmp.min()[value.channel3];
-        max[2] = (Set::Scalar) value.bmp.max()[value.channel3];
+        value.min[2] = (Set::Scalar) value.bmp.min()[value.channel3];
+        value.max[2] = (Set::Scalar) value.bmp.max()[value.channel3];
 
         
         //pp.query("min",value.min); // Scaling value - minimum (default: 0.0)
