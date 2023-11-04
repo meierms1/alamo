@@ -4,7 +4,6 @@
 // Note that in GIMP, you must select "do not write color space information"
 // and "24 bit R8 G8 B8" when exporting the BMP file.
 //
-
 #ifndef IC_EulerAngles_H
 #define IC_EulerAngles_H
 #include <cmath>
@@ -38,7 +37,7 @@ public:
   
     void Add(const int &lev, Set::Field<Set::Scalar> &a_field, Set::Scalar)
     {        
-        //Util::Assert(INFO,TEST(a_field[0]->nComp() == 3));
+        Util::Assert(INFO,TEST(a_field[0]->nComp() == 3));
         Set::Vector DX(geom[lev].CellSize());
         amrex::Box domain = geom[lev].Domain();
 
@@ -154,6 +153,9 @@ public:
                     field(i,j,k,2) =
                         (fQ11B*(x2-ximg(0))*(y2-ximg(1)) + fQ21B*(ximg(0)-x1)*(y2-ximg(1)) + fQ12B*(x2-ximg(0))*(ximg(1)-y1) + fQ22B*(ximg(0)-x1)*(ximg(1)-y1)) / (img_dx * img_dy);
                     
+                    //field(i,j,k,0) = (field(i,j,k,0)/255*360)*(3.14/180);
+                    //field(i,j,k,1) = (field(i,j,k,1)/255*360)*(3.14/180);
+                    //field(i,j,k,2) = (field(i,j,k,2)/255*360)*(3.14/180);
                     
                     
                
@@ -175,6 +177,10 @@ public:
                     Set::Scalar fQ11B = ((Set::Scalar)(bmp(I  ,J  )[channel3]) - min[2]) / (max[2] - min[2]);
                     Set::Scalar fQ12B = ((Set::Scalar)(bmp(I  ,J+1)[channel3]) - min[2]) / (max[2] - min[2]);
                     field(i,j,k,2) = fQ11B + (fQ12B-fQ11B) * (ximg(1) - y1);
+                    
+                    //field(i,j,k,0) = (field(i,j,k,0)/255*360)*(3.14/180);
+                    //field(i,j,k,1) = (field(i,j,k,1)/255*360)*(3.14/180);
+                    //field(i,j,k,2) = (field(i,j,k,2)/255*360)*(3.14/180);
                 }
                 else if (I <  bmp.nx-1 && J == bmp.ny - 1)
                 {
@@ -194,6 +200,10 @@ public:
                     Set::Scalar fQ21B = ((Set::Scalar)(bmp(I+1,J  )[channel3]) - min[2]) / (max[2] - min[2]);
                     field(i,j,k,2) = fQ11B + (fQ21B-fQ11B) * (ximg(0) - x1);
                     
+                    //field(i,j,k,0) = (field(i,j,k,0)/255*360)*(3.14/180);
+                    //field(i,j,k,1) = (field(i,j,k,1)/255*360)*(3.14/180);
+                    //field(i,j,k,2) = (field(i,j,k,2)/255*360)*(3.14/180);
+                    
                 }
                 else if (I ==  bmp.nx-1 && J == bmp.ny - 1)
                 {
@@ -205,6 +215,9 @@ public:
                     field(i,j,k,1) = fQ11G;
                     Set::Scalar fQ11B = ((Set::Scalar)(bmp(I  ,J  )[channel3]) - min[2]) / (max[2] - min[2]);
                     field(i,j,k,2) = fQ11B;
+                    //field(i,j,k,0) = (field(i,j,k,0)/255*360)*(3.14/180);
+                    //field(i,j,k,1) = (field(i,j,k,1)/255*360)*(3.14/180);
+                    //field(i,j,k,2) = (field(i,j,k,2)/255*360)*(3.14/180);
                 }
                 else
                 {
@@ -212,6 +225,9 @@ public:
                     field(i,j,k,0) = 0.0;
                     field(i,j,k,1) = 0.0;
                     field(i,j,k,2) = 0.0;
+                    //field(i,j,k,0) = (field(i,j,k,0)/255*360)*(3.14/180);
+                    //field(i,j,k,1) = (field(i,j,k,1)/255*360)*(3.14/180);
+                    //field(i,j,k,2) = (field(i,j,k,2)/255*360)*(3.14/180);
                 }
 
                 if (field.nComp() > 1) field(i,j,k,1) = 1.0 - field(i,j,k,0);
@@ -225,7 +241,9 @@ public:
                 //}
 
             });
+
         }
+
         a_field[lev]->FillBoundary();
         //a_fieldR[lev]->FillBoundary();
         //a_fieldG[lev]->FillBoundary();
@@ -242,6 +260,8 @@ private:
     //Set::Scalar min=0.0, max=255.0;
     Set::Scalar min[3] = {0.0, 0.0, 0.0};
     Set::Scalar max[3] = {255.0, 255.0, 255.0};
+    //Set::Scalar min[3] = {0.0, 0.0, 0.0};
+    //Set::Scalar max[3] = {2*3.14, 2*3.14, 2*3.14};
 
 public:
     static void Parse(EulerAngles & value, IO::ParmParse & pp)    //Replaced BMP with EulerAngles
@@ -301,3 +321,4 @@ public:
 };
 }
 #endif
+

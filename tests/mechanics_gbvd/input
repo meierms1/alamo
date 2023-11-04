@@ -3,7 +3,8 @@
 #@  nprocs = 1
 
 alamo.program               = mechanics
-alamo.program.mechanics.model = affine.isotropic
+#alamo.program.mechanics.model = affine.isotropic
+alamo.program.mechanics.model = linear.cubic
 plot_file=tests/mechanics_gbvd/output
 
 # this is not a time integration, so do
@@ -14,7 +15,7 @@ stop_time		    = 0.1
 # amr parameters
 amr.plot_int		    = 1
 amr.max_level		    = 4
-amr.n_cell		    = 32 32 32
+amr.n_cell		    = 100 100 100
 amr.blocking_factor	    = 4
 amr.regrid_int		    = 1
 amr.grid_eff		    = 1.0
@@ -26,25 +27,25 @@ geometry.prob_hi	    = 0.0005 0.0006 0.0
 geometry.is_periodic	    = 0 0 0
 
 
-ic.type         = eulerangles
-ic.eulerangles.filename = tests/mechanics_gbvd/images/1_001_00006_AnglesRepair.bmp
+euler.ic.type         = eulerangles
+euler.ic.eulerangles.filename = tests/mechanics_gbvd/images/1_001_00006_AnglesRepair.bmp
 #ic.eulerangles.filename = tests/mechanics_gbvd/interface-blur.bmp
-ic.eulerangles.fit      = fitwidth
+euler.ic.eulerangles.fit      = fitwidth
 
 
 #Tantalum
-nmodels = 2
-model1.E = 185 #GPa
-model1.nu = 0.35
+nmodels = 1
+#model1.E = 185 #GPa
+#model1.nu = 0.35
 #model1.F0 = -0.001 0 0 0 -0.001 0 0 0 -0.001
 #Nickel
-model2.E = 207 #GPa
-model2.nu = 0.31
+#model2.E = 207 #GPa
+#model2.nu = 0.31
 #model2.F0 = 0.001 0 0 0 0.001 0 0 0 0.001
 
 solver.verbose = 3
 solver.nriters = 1
-solver.fixed_iter=100
+solver.fixed_iter=2000
 ## BC 2D
 ### Edges
 #bc.constant.type.xlo = disp trac

@@ -124,6 +124,7 @@ public:
         }
         Util::Assert(INFO, TEST(value.models.size() > 0));
         value.RegisterNodalFab(value.eta_mf, value.models.size(), 2, "eta", true);
+        value.RegisterNodalFab(value.euler_mf, 3, 2, "euler", true);   //newline for euler
         // Refinement threshold for eta field
         pp.query("eta_ref_threshold", value.m_eta_ref_threshold);
         // Refinement threshold for strain gradient
@@ -147,6 +148,21 @@ public:
             // Default is false unless eta ic is set, then default is.
             // true.
             pp.query("eta.reset_on_regrid",value.eta_reset_on_regrid);
+        }
+        
+         // Read in IC for euler angles
+        if (pp.contains("euler.ic.type"))
+        {
+            std::string type;
+            pp.query("euler.ic.type", type); // Read IC type for the euler angles field
+            if (type == "eulerangles")       value.ic_euler = new IC::EulerAngles(value.geom, pp, "euler.ic.eulerangles");                             //newly added line
+            else Util::Abort(INFO,"Invalid value for ic.type: ",type);
+            
+            value.euler_reset_on_regrid = true;
+            // Whether to re-initialize eta when re-gridding occurs.
+            // Default is false unless eta ic is set, then default is.
+            // true.
+            pp.query("euler.reset_on_regrid",value.euler_reset_on_regrid);
         }
 
         // Read in IC for psi
@@ -175,9 +191,12 @@ public:
     {
         Base::Mechanics<MODEL>::Initialize(lev);
         eta_mf[lev]->setVal(0.0);
+        euler_mf[lev]->setVal(0.0);   //newline for euler angles
         if (models.size() > 1 && ic_eta) ic_eta->Initialize(lev, eta_mf);
         else eta_mf[lev]->setVal(1.0);
-
+        ic_euler->Initialize(lev, euler_mf);        //newline for euler angles
+        //else euler_mf[lev]->setVal(1.0);                                               //newline for euler angles. check and change this
+    
         if (psi_on) ic_psi->Initialize(lev, psi_mf);
     }
 
@@ -192,24 +211,57 @@ public:
             //rhs_mf[lev]->setVal(0.0);
 
             eta_mf[lev]->FillBoundary();
+            euler_mf[lev]->FillBoundary();    //euler angles
+           
 
             //disp_mf[lev]->setVal(Set::Vector::Zero());
 
             Set::Vector DX(geom[lev].CellSize());
 
+            //for (MFIter mfi(*model_mf[lev], false); mfi.isValid(); ++mfi)
+            //{
+            //   amrex::Box bx = mfi.grownnodaltilebox();
+
+            //    amrex::Array4<MODEL> const& model = model_mf[lev]->array(mfi);
+            //    amrex::Array4<const Set::Scalar> const& eta = eta_mf[lev]->array(mfi);
+            //    amrex::Array4<const Set::Scalar> const& euler = euler_mf[lev]->array(mfi);         //newline for euler angles
+
+            //    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
+            //        model(i, j, k) = MODEL::Zero();
+            //        for (unsigned int n = 0; n < models.size(); n++)
+            //            model(i, j, k) += eta(i, j, k, n) * models[n];
+            //    });
+            //}
             for (MFIter mfi(*model_mf[lev], false); mfi.isValid(); ++mfi)
             {
                 amrex::Box bx = mfi.grownnodaltilebox();
-
                 amrex::Array4<MODEL> const& model = model_mf[lev]->array(mfi);
-                amrex::Array4<const Set::Scalar> const& eta = eta_mf[lev]->array(mfi);
 
-                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
-                    model(i, j, k) = MODEL::Zero();
-                    for (unsigned int n = 0; n < models.size(); n++)
-                        model(i, j, k) += eta(i, j, k, n) * models[n];
-                });
+                //if (pp.contains("euler.ic.type")) 
+                {
+                    // If "euler.ic.type" is present, process euler
+                    amrex::Array4<const Set::Scalar> const& euler = euler_mf[lev]->array(mfi);
+
+                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
+                        model(i, j, k) = MODEL::Zero();
+			model(i,j,k).Define(260.2, 154.5, 82.6, euler(i,j,k,0)/255*360*(3.14/180), euler(i,j,k,1)/255*180*(3.14/180), euler(i,j,k,2)/255*360*(3.14/180));
+                        // for (unsigned int n = 0; n < models.size(); n++)
+                        //     model(i, j, k) += euler(i, j, k, n) * models[n];
+		    });
+                }
+                //else 
+                {
+                    // Otherwise, process eta
+                    amrex::Array4<const Set::Scalar> const& eta = eta_mf[lev]->array(mfi);
+
+                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
+                        model(i, j, k) = MODEL::Zero();
+                        for (unsigned int n = 0; n < models.size(); n++)
+                            model(i, j, k) += eta(i, j, k, n) * models[n];
+                    });
+                }
             }
+
 
             Util::RealFillBoundary(*model_mf[lev], geom[lev]);
         }
@@ -222,51 +274,112 @@ public:
 
         Set::Vector DX(geom[lev].CellSize());
         Set::Scalar DXnorm = DX.lpNorm<2>();
-        for (amrex::MFIter mfi(*eta_mf[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        //for (amrex::MFIter mfi(*eta_mf[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        //{
+        //    amrex::Box bx = mfi.nodaltilebox();
+        //    amrex::Array4<char> const& tags = a_tags.array(mfi);
+        //    amrex::Array4<Set::Scalar> const& eta = eta_mf[lev]->array(mfi);
+        //    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+        //    {
+        //        auto sten = Numeric::GetStencil(i, j, k, bx);
+        //        {
+        //            Set::Vector grad = Numeric::Gradient(eta, i, j, k, 0, DX.data(), sten);
+        //            if (grad.lpNorm<2>() * DXnorm > m_eta_ref_threshold)
+        //                tags(i, j, k) = amrex::TagBox::SET;
+        //        }
+        //    });
+        //    if (psi_on)
+        //    {
+        //        amrex::Array4<Set::Scalar> const& psi = psi_mf[lev]->array(mfi);
+        //        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+        //        {
+        //            auto sten = Numeric::GetStencil(i, j, k, bx);
+        //            {
+        //                Set::Vector gradpsi = Numeric::Gradient(psi, i, j, k, 0, DX.data(), sten);
+        //                if (gradpsi.lpNorm<2>() * DXnorm > m_eta_ref_threshold)
+        //                    tags(i, j, k) = amrex::TagBox::SET;
+        //            }
+        //        });
+        //    }
+        //}
+        
+
+        //if (!processEuler)  // This loop is for eta
         {
-            amrex::Box bx = mfi.nodaltilebox();
-            amrex::Array4<char> const& tags = a_tags.array(mfi);
-            amrex::Array4<Set::Scalar> const& eta = eta_mf[lev]->array(mfi);
-            amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+            for (amrex::MFIter mfi(*eta_mf[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
-                auto sten = Numeric::GetStencil(i, j, k, bx);
-                {
-                    Set::Vector grad = Numeric::Gradient(eta, i, j, k, 0, DX.data(), sten);
-                    if (grad.lpNorm<2>() * DXnorm > m_eta_ref_threshold)
-                        tags(i, j, k) = amrex::TagBox::SET;
-                }
-            });
-            if (psi_on)
-            {
-                amrex::Array4<Set::Scalar> const& psi = psi_mf[lev]->array(mfi);
+                amrex::Box bx = mfi.nodaltilebox();
+                amrex::Array4<char> const& tags = a_tags.array(mfi);
+                amrex::Array4<Set::Scalar> const& eta = eta_mf[lev]->array(mfi);
+
                 amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
                     auto sten = Numeric::GetStencil(i, j, k, bx);
                     {
-                        Set::Vector gradpsi = Numeric::Gradient(psi, i, j, k, 0, DX.data(), sten);
-                        if (gradpsi.lpNorm<2>() * DXnorm > m_eta_ref_threshold)
+                        Set::Vector grad = Numeric::Gradient(eta, i, j, k, 0, DX.data(), sten);
+                        if (grad.lpNorm<2>() * DXnorm > m_eta_ref_threshold)
+                            tags(i, j, k) = amrex::TagBox::SET;
+                    }
+                });
+
+                if (psi_on)
+                {
+                    amrex::Array4<Set::Scalar> const& psi = psi_mf[lev]->array(mfi);
+                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                    {
+                        auto sten = Numeric::GetStencil(i, j, k, bx);
+                        {
+                            Set::Vector gradpsi = Numeric::Gradient(psi, i, j, k, 0, DX.data(), sten);
+                            if (gradpsi.lpNorm<2>() * DXnorm > m_eta_ref_threshold)
+                                tags(i, j, k) = amrex::TagBox::SET;
+                        }
+                    });
+                }
+            }
+        }
+        //else  // This loop is for euler
+        {
+            for (amrex::MFIter mfi(*euler_mf[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
+            {
+                amrex::Box bx = mfi.nodaltilebox();
+                amrex::Array4<char> const& tags = a_tags.array(mfi);
+                amrex::Array4<Set::Scalar> const& euler = euler_mf[lev]->array(mfi);
+
+                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                {
+                    auto sten = Numeric::GetStencil(i, j, k, bx);
+                    {
+                        Set::Vector grad = Numeric::Gradient(euler, i, j, k, 0, DX.data(), sten);
+                        if (grad.lpNorm<2>() * DXnorm > m_euler_ref_threshold)
                             tags(i, j, k) = amrex::TagBox::SET;
                     }
                 });
             }
         }
+        
     }
 
     void Regrid(int lev, Set::Scalar time) override
     {
         if (eta_reset_on_regrid && models.size() > 1 && ic_eta) ic_eta->Initialize(lev, eta_mf, time);
+        ic_euler->Initialize(lev, euler_mf, time);                 //newline added(change this later)
         if (psi_reset_on_regrid) ic_psi->Initialize(lev, psi_mf, time);
     }
 
 protected:
     Set::Field<Set::Scalar> eta_mf;
+    Set::Field<Set::Scalar> euler_mf;          //new line added
     Set::Scalar m_eta_ref_threshold = 0.01;
+    Set::Scalar m_euler_ref_threshold = 0.01;   //new line added
     std::vector<MODEL> models;
     IC::IC* ic_eta = nullptr;
+    IC::IC* ic_euler = nullptr;     //newline added
     IC::IC* ic_psi = nullptr;
     BC::BC<Set::Scalar>* bc_psi = nullptr;
     bool psi_reset_on_regrid = false;
     bool eta_reset_on_regrid = false;
+    bool euler_reset_on_regrid = false;
+
 
     using Base::Mechanics<MODEL>::m_type;
     using Base::Mechanics<MODEL>::finest_level;

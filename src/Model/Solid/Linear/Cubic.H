@@ -8,6 +8,7 @@
 
 #include "Model/Solid/Solid.H"
 #include "IO/ParmParse.H"
+// #include "IO/EulerAngles.H"
 
 namespace Model
 {
@@ -50,23 +51,39 @@ public:
         out << ddw;
     }
 
-public:
-    Set::Matrix4<AMREX_SPACEDIM,Set::Sym::MajorMinor> ddw;
-    static const KinematicVariable kinvar = KinematicVariable::gradu;
+ public:
+     Set::Matrix4<AMREX_SPACEDIM,Set::Sym::MajorMinor> ddw;
+     static const KinematicVariable kinvar = KinematicVariable::gradu;
 
-    AMREX_FORCE_INLINE
-    static Cubic Combine(const std::vector<Cubic> &models, const std::vector<Set::Scalar> &eta)
-    {
-        Cubic ret;
-        ret.ddw = Set::Matrix4<AMREX_SPACEDIM,Set::Sym::MajorMinor>::Zero();
-        Set::Scalar etasum = 0.;
-        for (unsigned int n = 0 ; n < models.size(); n++) etasum += eta[n];
-        for (unsigned int n = 0 ; n < models.size(); n++)
-        {
-            ret.ddw += models[n].ddw * (eta[n] / etasum);
-        }
-        return ret;
-    }
+     AMREX_FORCE_INLINE
+     static Cubic Combine(const std::vector<Cubic> &models, const std::vector<Set::Scalar> &eta)
+     {
+         Cubic ret;
+         ret.ddw = Set::Matrix4<AMREX_SPACEDIM,Set::Sym::MajorMinor>::Zero();
+         Set::Scalar etasum = 0.;
+         for (unsigned int n = 0 ; n < models.size(); n++) etasum += eta[n];
+         for (unsigned int n = 0 ; n < models.size(); n++)
+         {
+             ret.ddw += models[n].ddw * (eta[n] / etasum);
+         }
+         return ret;
+     }
+    
+    
+//     //newly added
+//     AMREX_FORCE_INLINE
+//     static Cubic Combine(const std::vector<Cubic> &models, const std::vector<Set::Scalar> &euler)
+//     {
+//         Cubic ret;
+//         ret.ddw = Set::Matrix4<AMREX_SPACEDIM,Set::Sym::MajorMinor>::Zero();
+//         Set::Scalar etasum = 0.;
+//         for (unsigned int n = 0 ; n < models.size(); n++) eulersum += euler[n];
+//         for (unsigned int n = 0 ; n < models.size(); n++)
+//         {
+//             ret.ddw += models[n].ddw * (euler[n] / eulersum);
+//         }
+//         return ret;
+//     }
 
     static Cubic Zero()
     {
@@ -89,18 +106,31 @@ public:
         return ret;
     }
 
+    // static void Parse(Cubic & value, IO::ParmParse & pp)
+    // {
+    //     Set::Scalar C11 = 1.68, C12 = 1.21, C44 = 0.75;
+    //     pp.query("C11",C11); // Elastic constant (default: 1.68)
+    //     pp.query("C12",C12); // Elastic constant (default: 1.21)
+    //     pp.query("C44",C44); // Elastic constant (default: 0.75)
+
+    //     if (pp.contains("random"))
+    //     {
+    //         value = Cubic::Random(C11,C12,C44);
+    //         return;
+    //     }
+
+    //     Set::Scalar phi1 = 0.0, Phi = 0.0, phi2 = 0.0;
+    //     pp.query("phi1",phi1);  // Bunge Euler angle :math:`\phi_1`
+    //     pp.query("Phi",Phi);    // Bunge Euler angle :math:`\Phi`
+    //     pp.query("phi2",phi2);  // Bunge Euler angle :math:`\phi_2`
+    //     value.Define(C11,C12,C44,phi1,Phi,phi2);
+    // }
     static void Parse(Cubic & value, IO::ParmParse & pp)
     {
-        Set::Scalar C11 = 1.68, C12 = 1.21, C44 = 0.75;
+        Set::Scalar C11 = 260.2, C12 = 154.5, C44 = 82.6;
         pp.query("C11",C11); // Elastic constant (default: 1.68)
         pp.query("C12",C12); // Elastic constant (default: 1.21)
         pp.query("C44",C44); // Elastic constant (default: 0.75)
-
-        if (pp.contains("random"))
-        {
-            value = Cubic::Random(C11,C12,C44);
-            return;
-        }
 
         Set::Scalar phi1 = 0.0, Phi = 0.0, phi2 = 0.0;
         pp.query("phi1",phi1);  // Bunge Euler angle :math:`\phi_1`
@@ -108,7 +138,6 @@ public:
         pp.query("phi2",phi2);  // Bunge Euler angle :math:`\phi_2`
         value.Define(C11,C12,C44,phi1,Phi,phi2);
     }
-
     #define OP_CLASS Cubic
     #define OP_VARS X(ddw)
     #include "Model/Solid/InClassOperators.H"
