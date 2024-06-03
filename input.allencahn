@@ -43,14 +43,14 @@ allencahn.alpha.bc.val.xhi = 0.0
 allencahn.alpha.bc.val.ylo = 0.0
 allencahn.alpha.bc.val.yhi = 0.0
 
-#allencahn.alpha.ic.type = bmp
-#allencahn.alpha.ic.bmp.filename = tests/AllenCahn/bordernoise.bmp
-#allencahn.alpha.ic.bmp.fit = fitwidth
-#allencahn.alpha.ic.bmp.max = 0
-#allencahn.alpha.ic.bmp.min = 255
+allencahn.alpha.ic.type = bmp
+allencahn.alpha.ic.bmp.filename = tests/AllenCahn/bordernoise.bmp
+allencahn.alpha.ic.bmp.fit = fitwidth
+allencahn.alpha.ic.bmp.max = 0
+allencahn.alpha.ic.bmp.min = 255
 
-allencahn.alpha.ic.type = expression
-allencahn.alpha.ic.expression.region0 = "0.5 * (1 + tanh((sqrt(x^2+y^2) - 1.0)/0.5))"
+#allencahn.alpha.ic.type = expression
+#allencahn.alpha.ic.expression.region0 = "0.5 * (1 + tanh((sqrt(x^2+y^2) - 1.0)/0.5))"
 
 
 #allencahn.alpha.ic.type = expression
@@ -61,7 +61,7 @@ allencahn.alpha.ic.expression.region0 = "0.5 * (1 + tanh((sqrt(x^2+y^2) - 1.0)/0
 #allencahn.alpha.ic.psread.mult = 10.0
 #allencahn.alpha.ic.psread.x0 = -20.0 0
 #allencahn.alpha.ic.psread.invert = 1
-allencahn.ch.L = 0.0 #1.0
+allencahn.ch.L = 1.0
 allencahn.ch.eps = 0.1
 allencahn.ch.grad = 0.01
 allencahn.ch.chempot = 0.01
