@@ -33,7 +33,7 @@ protected:
         AllenCahn::ic->Initialize(lev,eta_mf,0.0);
         AllenCahn::ic->Initialize(lev,eta_old_mf,0.0);
         
-        Hydro::Mix(lev);
+        //Hydro::Mix(lev);
     }
 
     void TimeStepBegin(Set::Scalar a_time, int a_step) override

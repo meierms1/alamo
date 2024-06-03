@@ -192,10 +192,13 @@ void Hydro::Mix(int lev)
             rho(i, j, k) = eta(i, j, k) * rho(i, j, k) + (1.0 - eta(i, j, k)) * rho_solid(i, j, k);
             rho_old(i, j, k) = rho(i, j, k);
 
-            E(i, j, k) = (0.5 * (v(i, j, k, 0) * v(i, j, k, 0) + v(i, j, k, 1) * v(i, j, k, 1)) * rho(i, j, k) + p(i, j, k) / (gamma - 1.0)) * eta(i, j, k) 
-                         + 
-                         (0.5 * (v_solid(i, j, k, 0) * v_solid(i, j, k, 0) + v_solid(i, j, k, 1) * v_solid(i, j, k, 1)) * rho_solid(i, j, k) + p(i, j, k) / (gamma - 1.0)) * (1.0 - eta(i, j, k))
-                         ;
+            E(i, j, k) =
+                (0.5 * (v(i, j, k, 0) * v(i, j, k, 0) + v(i, j, k, 1) * v(i, j, k, 1)) * rho(i, j, k)) * eta(i, j, k) 
+                + 
+                (0.5 * (v_solid(i, j, k, 0) * v_solid(i, j, k, 0) + v_solid(i, j, k, 1) * v_solid(i, j, k, 1)) * rho_solid(i, j, k) ) * (1.0 - eta(i, j, k))
+                +
+                (p(i, j, k) / (gamma - 1.0))
+                ;
             E_old(i, j, k) = E(i, j, k);
 
             M(i, j, k, 0) = rho(i, j, k) * v(i, j, k, 0) * eta(i, j, k) + rho_solid(i, j, k) * v_solid(i, j, k, 0) * (1.0 - eta(i, j, k));
@@ -285,10 +288,10 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
             Set::Vector grad_eta     = Numeric::Gradient(eta, i, j, k, 0, DX);
             Set::Scalar grad_eta_mag = grad_eta.lpNorm<2>();
             Set::Matrix hess_eta     = Numeric::Hessian(eta, i, j, k, 0, DX);
-            Set::Scalar etadot_cell  = etadot(i, j, k);
-            Set::Matrix gradu        = Numeric::Gradient(v, i, j, k, DX);
-            Set::Scalar divu         = 0.0;//Numeric::Divergence(v, i, j, k, 2, DX);
-            Set::Matrix I            = Set::Matrix::Identity();
+            //Set::Scalar etadot_cell  = etadot(i, j, k);
+            //Set::Matrix gradu        = Numeric::Gradient(v, i, j, k, DX);
+            // Set::Scalar divu         = 0.0;//Numeric::Divergence(v, i, j, k, 2, DX);
+            //Set::Matrix I            = Set::Matrix::Identity();
         
             // Flow values
             Set::Vector u(v(i,j,k,0),v(i,j,k,1));
@@ -296,7 +299,7 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
             Set::Scalar rho0  = rhoInterface(i, j, k);
             Set::Vector u0    = Set::Vector(vInjected(i,j,k,0),vInjected(i,j,k,1)) - grad_eta * etadot(i, j, k)/(grad_eta_mag * grad_eta_mag + 1.0e-12);
             Set::Vector q0    = Set::Vector(q(i,j,k,0),q(i,j,k,1));
-            Set::Matrix T     = 0.5 * mu * (gradu + gradu.transpose());
+            //Set::Matrix T     = 0.5 * mu * (gradu + gradu.transpose());
 
             Set::Scalar mdot0 = (rho0 * u0).dot(grad_eta);
             Set::Vector Pdot0 = Set::Vector::Zero();//(rho0 * (u0*u0.transpose()) - T + 0.5 * (gradu.transpose() + divu * I))*grad_eta;

@@ -42,11 +42,16 @@ allencahn.alpha.bc.val.xlo = 0.0
 allencahn.alpha.bc.val.xhi = 0.0
 allencahn.alpha.bc.val.ylo = 0.0
 allencahn.alpha.bc.val.yhi = 0.0
-allencahn.alpha.ic.type = bmp
-allencahn.alpha.ic.bmp.filename = tests/AllenCahn/bordernoise.bmp
-allencahn.alpha.ic.bmp.fit = fitwidth
-allencahn.alpha.ic.bmp.max = 0
-allencahn.alpha.ic.bmp.min = 255
+
+#allencahn.alpha.ic.type = bmp
+#allencahn.alpha.ic.bmp.filename = tests/AllenCahn/bordernoise.bmp
+#allencahn.alpha.ic.bmp.fit = fitwidth
+#allencahn.alpha.ic.bmp.max = 0
+#allencahn.alpha.ic.bmp.min = 255
+
+allencahn.alpha.ic.type = expression
+allencahn.alpha.ic.expression.region0 = "0.5 * (1 + tanh((sqrt(x^2+y^2) - 1.0)/0.5))"
+
 
 #allencahn.alpha.ic.type = expression
 #allencahn.alpha.ic.expression.region0 = "0.5 * (1 + tanh((sqrt(x^2+y^2) - 1.0)/0.1))"
@@ -56,37 +61,45 @@ allencahn.alpha.ic.bmp.min = 255
 #allencahn.alpha.ic.psread.mult = 10.0
 #allencahn.alpha.ic.psread.x0 = -20.0 0
 #allencahn.alpha.ic.psread.invert = 1
-allencahn.ch.L = 1.0
+allencahn.ch.L = 0.0 #1.0
 allencahn.ch.eps = 0.1
 allencahn.ch.grad = 0.01
 allencahn.ch.chempot = 0.01
 
 
-
-
-
-
-
 ### ETA IC ###
 hydro.rhoInterface.ic.type = expression
-hydro.rhoInterface.ic.expression.region0 = "20.0"
+hydro.rhoInterface.ic.expression.region0 = "0.0"
 hydro.vInjected.ic.type = expression
 hydro.vInjected.ic.expression.region0 = "0.0"
 hydro.vInjected.ic.expression.region1 = "0.0"
-hydro.deltapInterface.ic.type = expression
-hydro.deltapInterface.ic.expression.region0 = "0.0"
+hydro.q.ic.type = expression
+hydro.q.ic.expression.region0 = "0.0"
+hydro.q.ic.expression.region1 = "0.0"
+
+#hydro.deltapInterface.ic.type = expression
+#hydro.deltapInterface.ic.expression.region0 = "0.0"
 ### HYDRO PARAM ###
 hydro.gamma = 1.4
 hydro.cfl   = 0.4
-hydro.mu    = 0.5
-hydro.rho_solid = 30.0 #kg/m^3
-hydro.rho_fluid = 20.0 #kg/m^3
-hydro.E_solid   = 5.0
+hydro.mu    = 0.01
+#hydro.rho_solid = 30.0 #kg/m^3
+#hydro.rho_fluid = 20.0 #kg/m^3
+#hydro.E_solid   = 5.0
 hydro.Velocity.ic.type = expression
 hydro.Velocity.ic.expression.constant.eps   = 0.1
 hydro.Velocity.ic.expression.constant.x0    = -2.0
 hydro.Velocity.ic.expression.region0 = "0.0"
 hydro.Velocity.ic.expression.region1 = "0.0"
+
+hydro.Density.ic.type = expression
+hydro.Density.ic.expression.region0 = "20.0" 
+hydro.SolidDensity.ic.type = expression
+hydro.SolidDensity.ic.expression.region0 = "30.0" 
+hydro.SolidVelocity.ic.type = expression
+hydro.SolidVelocity.ic.expression.region0 = "0.0" 
+hydro.SolidVelocity.ic.expression.region1 = "0.0"
+
 hydro.Pressure.ic.type = expression
 hydro.Pressure.ic.expression.constant.gamma = 1.4
 hydro.Pressure.ic.expression.constant.E_solid = 5.0
