@@ -122,5 +122,6 @@ r_refinement_criterion   = 0.1
 e_refinement_criterion   = 0.1
 m_refinement_criterion   = 0.1
 eta_refinement_criterion = 0.1
+omega_refinement_criterion = 0.55
 
 #TODO
