@@ -22,6 +22,9 @@ public:
     {
         pp.queryclass("allencahn",static_cast<AllenCahn*>(&value));
         pp.queryclass("hydro",static_cast<Hydro*>(&value));
+        // when converting alpha to eta, use this value as
+        // n for :math:`\eta = \alpha^n`
+        pp.query_default("power",value.power,1); 
     }
 
 
@@ -63,13 +66,15 @@ protected:
             amrex::Array4<const Set::Scalar> const& alpha_new = (*alpha_mf[lev]).array(mfi);
             amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
-                eta_new(i,j,k) = alpha_new(i,j,k);
+                eta_new(i,j,k) = 1.0;
+                for (int p = 0; p < power; p++)
+                    eta_new(i,j,k) *= alpha_new(i,j,k);
             });
         }
     }
 
     int invert = false;
-
+    int power = -1;
 };
 } // namespace Integrator
 #endif
