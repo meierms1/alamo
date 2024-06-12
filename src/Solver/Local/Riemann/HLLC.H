@@ -119,10 +119,10 @@ public:
         fl.Mass = rho_face * u_face;
         fl.Momentum_normal = (rho_face * u_face * u_face) + p_face;
         if (fl.Mass > 0.0) {
-            fl.Momentum_tangent = (fl.Mass * uTang_lo) * u_face;
+            fl.Momentum_tangent = (rho_face * uTang_lo) * u_face;
         }
         else {
-            fl.Momentum_tangent = (fl.Mass * uTang_hi) * u_face;
+            fl.Momentum_tangent = (rho_face * uTang_hi) * u_face;
         };
         fl.Energy = (ke_face + ue_face) * u_face;
 

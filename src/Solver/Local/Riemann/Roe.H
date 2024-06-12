@@ -65,7 +65,6 @@ public:
         ev[2] = std::abs(u_RL - a_RL);
 
         //compute wave strengths
-
         Set::Scalar drho, dp, dvel;
         dvel = (hi.velocity_normal - lo.velocity_normal);
         dp   = (hi.pressure        - lo.pressure       );
