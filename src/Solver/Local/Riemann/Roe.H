@@ -106,7 +106,7 @@ public:
         for (int i = 0; i < 1; i++)
         {
 
-            State hi, lo, fixed, pos_vel1, pos_vel2, neg_vel1, neg_vel2, comp1, comp2;
+            State hi, lo, fixed, pos_vel1, pos_vel2, neg_vel1, neg_vel2, comp1, comp2, comp3, comp4;
             hi.rho = Util::Random();
             hi.velocity_normal = Util::Random();
             hi.velocity_tangent = Util::Random();
@@ -151,6 +151,16 @@ public:
             comp2.velocity_normal = 2.2f;
             comp2.velocity_tangent = 3.3f;
             comp2.pressure = 4.4f;
+
+            comp3.rho = 1.0f;
+            comp3.velocity_normal = -2.0f;
+            comp3.velocity_tangent = -3.0f;
+            comp3.pressure = 4.0f;
+
+            comp4.rho = 1.1f;
+            comp4.velocity_normal = -2.2f;
+            comp4.velocity_tangent = -3.3f;
+            comp4.pressure = 4.4f;
 
             // 
             // Zero flux test: if the state is the same on both sides,
@@ -215,7 +225,9 @@ public:
             // }
 
             Flux comp = Solve(comp1, comp2, 1.4);
-
+            Util::Warning(INFO, "flux check: Mass flux =", comp.Mass, " Normal momentum flux =", comp.Momentum_normal, " Tangential momentum flux =", comp.Momentum_tangent, " Energy flux =", comp.Energy);
+            Flux rcomp = Solve(comp4, comp3, 1.4);
+            Util::Warning(INFO, "flux check: Mass flux =", rcomp.Mass, " Normal momentum flux =", rcomp.Momentum_normal, " Tangential momentum flux =", rcomp.Momentum_tangent, " Energy flux =", rcomp.Energy);
         }
 
         return failed;
