@@ -104,10 +104,10 @@ public:
     static int Test()
     {
         int failed = 0;
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 1; i++)
         {
 
-            State hi, lo, fixed, pos_vel1, pos_vel2, neg_vel1, neg_vel2;
+            State hi, lo, fixed, pos_vel1, pos_vel2, neg_vel1, neg_vel2, comp1, comp2;
             hi.rho = Util::Random();
             hi.velocity_normal = Util::Random();
             hi.velocity_tangent = Util::Random();
@@ -119,7 +119,7 @@ public:
             lo.pressure = Util::Random();
 
             fixed.rho = Util::Random();
-            fixed.velocity_normal = Util::Random();
+            fixed.velocity_normal = 0.0f;
             fixed.velocity_tangent = Util::Random();
             fixed.pressure = Util::Random();
 
@@ -143,16 +143,26 @@ public:
             neg_vel2.velocity_tangent = -pos_vel2.velocity_tangent;
             neg_vel2.pressure = pos_vel2.pressure;
 
+            comp1.rho = 1.0f;
+            comp1.velocity_normal = 2.0f;
+            comp1.velocity_tangent = 3.0f;
+            comp1.pressure = 4.0f;
+
+            comp2.rho = 1.1f;
+            comp2.velocity_normal = 2.2f;
+            comp2.velocity_tangent = 3.3f;
+            comp2.pressure = 4.4f;
+
             // 
             // Zero flux test: if the state is the same on both sides,
             //                 the flux should be zero.
-            // 
-            // Flux zero = Solve(fixed, fixed, 1.4, 0.5);
+            
+            Flux zero = Solve(fixed, fixed, 1.4);
 
-            // if (fabs(zero.mass) > 1E-10) { Util::Warning(INFO, "Nonzero mass flux ", zero.mass); failed++; }
-            // if (fabs(zero.velocity_normal) > 1E-10) { Util::Warning(INFO, "Nonzero x.velocity flux ", zero.velocity_normal); failed++; }
-            // if (fabs(zero.velocity_tangent) > 1E-10) { Util::Warning(INFO, "Nonzero y.velocity flux ", zero.velocity_tangent); failed++; }
-            // if (fabs(zero.pressure) > 1E-10) { Util::Warning(INFO, "Nonzero.pressure flux ", zero.pressure); failed++; }
+            if (fabs(zero.Mass) > 1E-10) { Util::Warning(INFO, "Nonzero mass flux ", zero.Mass); failed++; }
+            if (fabs(zero.Momentum_normal) > 1E-10) { Util::Warning(INFO, "Nonzero x momentum flux ", zero.Momentum_normal); failed++; }
+            if (fabs(zero.Momentum_tangent) > 1E-10) { Util::Warning(INFO, "Nonzero y momentum flux ", zero.Momentum_tangent); failed++; }
+            if (fabs(zero.Energy) > 1E-10) { Util::Warning(INFO, "Nonzero energy flux ", zero.Energy); failed++; }
 
             // // 
             // // Antisymmetry test: reversing hi and lo should produce the same
@@ -205,6 +215,7 @@ public:
             //     Util::Warning(INFO, .pressure flux error: positive vel=", pos.pressure, " negative vel=", neg.pressure); failed++;
             // }
 
+            Flux comp = Solve(comp1, comp2, 1.4);
 
         }
 

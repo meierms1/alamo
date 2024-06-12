@@ -138,7 +138,7 @@ public:
         for (int i = 0; i < 1; i++)
         {
 
-            State hi, lo, fixed, pos_vel1, pos_vel2, neg_vel1, neg_vel2;
+            State hi, lo, fixed, pos_vel1, pos_vel2, neg_vel1, neg_vel2, comp1, comp2;
             hi.rho = Util::Random();
             hi.velocity_normal = Util::Random();
             hi.velocity_tangent = Util::Random();
@@ -150,7 +150,7 @@ public:
             lo.pressure = Util::Random();
 
             fixed.rho = Util::Random();
-            fixed.velocity_normal = Util::Random();
+            fixed.velocity_normal = 0.0f;
             fixed.velocity_tangent = Util::Random();
             fixed.pressure = Util::Random();
 
@@ -173,6 +173,17 @@ public:
             neg_vel2.velocity_normal = -pos_vel2.velocity_normal;
             neg_vel2.velocity_tangent = -pos_vel2.velocity_tangent;
             neg_vel2.pressure = pos_vel2.pressure;
+
+            comp1.rho = 1.0f;
+            comp1.velocity_normal = 2.0f;
+            comp1.velocity_tangent = 3.0f;
+            comp1.pressure = 4.0f;
+
+            comp2.rho = 1.1f;
+            comp2.velocity_normal = 2.2f;
+            comp2.velocity_tangent = 3.3f;
+            comp2.pressure = 4.4f;
+
 
             // 
             // Zero flux test: if the state is the same on both sides,
@@ -234,6 +245,8 @@ public:
             {
                 Util::Warning(INFO, "energy flux error: positive vel=", pos.Energy, " negative vel=", neg.Energy); failed++;
             }
+
+            Flux comp = Solve(comp1, comp2, 1.4);
         }
 
         return failed;
