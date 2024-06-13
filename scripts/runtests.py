@@ -71,7 +71,7 @@ parser.add_argument('--comp', default="g++", help='Compiler. Options: [g++], cla
 parser.add_argument('--timeout', default=10000, help='Timeout value in seconds (default: 10000)')
 parser.add_argument('--post', default=None, help='Use a post script to post results')
 parser.add_argument('--clean', dest='clean', default=True, action='store_true', help='Clean up output files if test is successful (on by default)')
-parser.add_argument('--no-clean', dest='clean', default=False, action='store_false', help='Keep all output files')
+parser.add_argument('--no-clean', dest='clean', default=True, action='store_false', help='Keep all output files')
 parser.add_argument('--permissive', dest='permissive', default=False, action='store_true', help='Option to run without erroring out (if at all possible)')
 args=parser.parse_args()
 
