@@ -106,7 +106,7 @@ public:
         for (int i = 0; i < 1; i++)
         {
 
-            State hi, lo, fixed, pos_vel1, pos_vel2, neg_vel1, neg_vel2, comp1, comp2, comp3, comp4;
+            State hi, lo, fixed, pos_vel1, pos_vel2, neg_vel1, neg_vel2, comp1, comp2, comp3, comp4, comp5, comp6;
             hi.rho = Util::Random();
             hi.velocity_normal = Util::Random();
             hi.velocity_tangent = Util::Random();
@@ -162,12 +162,24 @@ public:
             comp4.velocity_tangent = -3.3f;
             comp4.pressure = 4.4f;
 
+            comp5.rho = 1.0f;
+            comp5.velocity_normal = -2.0f;
+            comp5.velocity_tangent = 0.0f;
+            comp5.pressure = 4.0f;
+
+            comp6.rho = comp5.rho;
+            comp6.velocity_normal = comp5.velocity_normal;
+            comp6.velocity_tangent = comp5.velocity_tangent;
+            comp6.pressure = comp5.pressure;
+
+
             // 
             // Zero flux test: if the state is the same on both sides,
             //                 the flux should be zero.
             
             Flux zero = Solve(fixed, fixed, 1.4);
-
+            Util::Warning(INFO, "flux check: Mass flux =", zero.Mass, " Normal momentum flux =", zero.Momentum_normal, " Tangential momentum flux =", zero.Momentum_tangent, " Energy flux =", zero.Energy);
+            
             if (fabs(zero.Mass) > 1E-10) { Util::Warning(INFO, "Nonzero mass flux ", zero.Mass); failed++; }
             if (fabs(zero.Momentum_normal) > 1E-10) { Util::Warning(INFO, "Nonzero x momentum flux ", zero.Momentum_normal); failed++; }
             if (fabs(zero.Momentum_tangent) > 1E-10) { Util::Warning(INFO, "Nonzero y momentum flux ", zero.Momentum_tangent); failed++; }
@@ -228,6 +240,8 @@ public:
             Util::Warning(INFO, "flux check: Mass flux =", comp.Mass, " Normal momentum flux =", comp.Momentum_normal, " Tangential momentum flux =", comp.Momentum_tangent, " Energy flux =", comp.Energy);
             Flux rcomp = Solve(comp4, comp3, 1.4);
             Util::Warning(INFO, "flux check: Mass flux =", rcomp.Mass, " Normal momentum flux =", rcomp.Momentum_normal, " Tangential momentum flux =", rcomp.Momentum_tangent, " Energy flux =", rcomp.Energy);
+            Flux qcomp = Solve(comp5, comp6, 1.4);
+            Util::Warning(INFO, "flux check: Mass flux =", qcomp.Mass, " Normal momentum flux =", qcomp.Momentum_normal, " Tangential momentum flux =", qcomp.Momentum_tangent, " Energy flux =", qcomp.Energy);
         }
 
         return failed;
