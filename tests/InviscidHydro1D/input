@@ -85,6 +85,9 @@ vInjected.ic.type = expression
 vInjected.ic.expression.region0 = "0.005"
 vInjected.ic.expression.region1 = "0.0"
 
+q.ic.type = constant
+q.ic.constant.value = 0.0
+
 #deltapInterface.ic.type = expression
 #deltapInterface.ic.expression.region0 = "0.0"
 
