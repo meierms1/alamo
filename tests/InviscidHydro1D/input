@@ -108,6 +108,9 @@ Density.ic.expression.region0 = "10.0"
 SolidDensity.ic.type = expression
 SolidDensity.ic.expression.region0 = "10.0" 
 
+SolidVelocity.ic.type = constant
+SolidVelocity.ic.constant.value = 0.005 0.0
+
 
 #rho_solid = 10.0 #kg/m^3
 #rho_fluid = 10.0 #kg/m^3

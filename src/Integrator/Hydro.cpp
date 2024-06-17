@@ -106,7 +106,7 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
     {
         std::string type = "constant";
         // initial condition for velocity in the solid phase
-        pp.query_validate("SolidVelocity.ic.type", type, {"constant","expression"});
+        pp.query_validate("SolidVelocity.ic.type", type, {"constant","expression"}, false);
         if (type == "constant") value.ic_SolidVelocity = new IC::Constant(value.geom, pp, "SolidVelocity.ic.constant");
         else if (type == "expression") value.ic_SolidVelocity = new IC::Expression(value.geom, pp, "SolidVelocity.ic.expression");
     }
@@ -432,10 +432,10 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 /*Update fluid momentum*/
                 eta(i, j, k) * 
                 (
-                M(i, j, k, 0)
-                + (flux_xlo.Momentum_normal  - flux_xhi.Momentum_normal) / DX[0] * dt
-                + (flux_ylo.Momentum_tangent - flux_yhi.Momentum_tangent) / DX[1] * dt 
-                + (mu * lap_ux)
+                    M(i, j, k, 0)
+                    + (flux_xlo.Momentum_normal  - flux_xhi.Momentum_normal) / DX[0] * dt
+                    + (flux_ylo.Momentum_tangent - flux_yhi.Momentum_tangent) / DX[1] * dt 
+                    + (mu * lap_ux)
                 ) 
                 -  (M(i, j, k, 0) - rho_solid(i, j, k) * v_solid(i, j, k, 0)) * etadot(i, j, k) * dt
                 /*Update solid momentum*/   
