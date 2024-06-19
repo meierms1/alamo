@@ -411,7 +411,7 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 ///////////+ 2. * mu * (div_u * div_u + div_u * symgrad_u) - 2./3. * mu * div_u * div_u;
                 ) 
                 - (E(i, j, k) - E_solid) * etadot(i, j, k) * dt //Should be jump value
-                /*Update solid energy*/
+                /*Update solid energnsy*/
                 + (1.0 - eta(i, j, k)) * E_solid
                 ;
                 
@@ -435,7 +435,7 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                     M(i, j, k, 0)
                     + (flux_xlo.Momentum_normal  - flux_xhi.Momentum_normal) / DX[0] * dt
                     + (flux_ylo.Momentum_tangent - flux_yhi.Momentum_tangent) / DX[1] * dt 
-                    + (mu * lap_ux)
+                    + (mu * lap_ux) * dt
                 ) 
                 -  (M(i, j, k, 0) - rho_solid(i, j, k) * v_solid(i, j, k, 0)) * etadot(i, j, k) * dt
                 /*Update solid momentum*/   
@@ -449,7 +449,7 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 M(i, j, k, 1)
                 + (flux_xlo.Momentum_tangent - flux_xhi.Momentum_tangent) / DX[0] * dt
                 + (flux_ylo.Momentum_normal  - flux_yhi.Momentum_normal ) / DX[1] * dt
-                + (mu * lap_uy)
+                + (mu * lap_uy) * dt
                 ) 
                 - (M(i, j, k, 1) - rho_solid(i, j, k) * v_solid(i, j, k, 1)) * etadot(i, j, k) * dt
                 //*Update solid momentum*/   
