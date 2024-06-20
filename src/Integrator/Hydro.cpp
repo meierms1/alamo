@@ -79,7 +79,7 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
     }
     {
         std::string type = "constant";
-	// initial condition for :math:`\eta`
+        // initial condition for :math:`\eta`
         pp.query_validate("eta.ic.type", type,{"laminate","expression","bmp","png"});
         if (type == "constant") value.ic_eta = new IC::Constant(value.geom, pp, "eta.ic.constant");
         else if (type == "laminate") value.ic_eta = new IC::Laminate(value.geom, pp, "eta.ic.laminate");
@@ -89,7 +89,7 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
     }
     {
         std::string type;
-	// initial condition for velocity
+        // initial condition for velocity
         pp.query_validate("Velocity.ic.type", type,{"constant","expression"});
         if (type == "constant") value.ic_Velocity = new IC::Constant(value.geom, pp, "Velocity.ic.constant");
         else if (type == "expression") value.ic_Velocity = new IC::Expression(value.geom, pp, "Velocity.ic.expression");
@@ -97,7 +97,7 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
     }
     {
         std::string type = "constant";
-	// initial condition for pressure
+        // initial condition for pressure
         pp.query_validate("Pressure.ic.type", type, {"constant","expression"});
         if (type == "constant") value.ic_Pressure = new IC::Constant(value.geom, pp, "Pressure.ic.constant");
         else if (type == "expression") value.ic_Pressure = new IC::Expression(value.geom, pp, "Pressure.ic.expression");
@@ -105,28 +105,28 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
     }
     {
         std::string type = "constant";
-	// initial condition for velocity in the solid phase
-        pp.query_validate("SolidVelocity.ic.type", type, {"constant","expression"});
+        // initial condition for velocity in the solid phase
+        pp.query_validate("SolidVelocity.ic.type", type, {"constant","expression"}, false);
         if (type == "constant") value.ic_SolidVelocity = new IC::Constant(value.geom, pp, "SolidVelocity.ic.constant");
         else if (type == "expression") value.ic_SolidVelocity = new IC::Expression(value.geom, pp, "SolidVelocity.ic.expression");
     }
     {
         std::string type;
-	// initial condition for density in the solid phase
+        // initial condition for density in the solid phase
         pp.query_validate("SolidDensity.ic.type", type,{"constant","expression"});
         if (type == "constant") value.ic_SolidDensity = new IC::Constant(value.geom, pp, "SolidDensity.ic.constant");
         else if (type == "expression") value.ic_SolidDensity = new IC::Expression(value.geom, pp, "SolidDensity.ic.expression");
     }
     {
         std::string type;
-	// initial condition for density
+        // initial condition for density
         pp.query_validate("Density.ic.type", type, {"constant","expression"});
         if (type == "constant") value.ic_Density = new IC::Constant(value.geom, pp, "Density.ic.constant");
         else if (type == "expression") value.ic_Density = new IC::Expression(value.geom, pp, "Density.ic.expression");
     }
     {
         std::string type;
-	// initial condition for density in interface region
+        // initial condition for density in interface region
         pp.query_validate("rhoInterface.ic.type", type,{"constant","expression"});
         if (type == "constant") value.ic_rhoInterface = new IC::Constant(value.geom, pp, "rhoInterface.ic.constant");
         else if (type == "expression") value.ic_rhoInterface = new IC::Expression(value.geom, pp, "rhoInterface.ic.expression");
@@ -134,14 +134,14 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
     }
     {
         std::string type = "constant";
-	// injectied velocity initial condition
+        // injectied velocity initial condition
         pp.query_validate("vInjected.ic.type", type, {"constant","expression"});
         if (type == "constant") value.ic_vInjected = new IC::Constant(value.geom, pp, "vInjected.ic.constant");
         else if (type == "expression") value.ic_vInjected = new IC::Expression(value.geom, pp, "vInjected.ic.expression");
     }
     {
         std::string type;
-	// heat flux initial condition
+        // heat flux initial condition
         pp.query_validate("q.ic.type", type,{"constant","expression"}); 
         if (type == "constant") value.ic_q = new IC::Constant(value.geom, pp, "q.ic.constant");
         else if (type == "expression") value.ic_q = new IC::Expression(value.geom, pp, "q.ic.expression");
@@ -411,7 +411,7 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 ///////////+ 2. * mu * (div_u * div_u + div_u * symgrad_u) - 2./3. * mu * div_u * div_u;
                 ) 
                 - (E(i, j, k) - E_solid) * etadot(i, j, k) * dt //Should be jump value
-                /*Update solid energy*/
+                /*Update solid energnsy*/
                 + (1.0 - eta(i, j, k)) * E_solid
                 ;
                 
@@ -432,10 +432,10 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 /*Update fluid momentum*/
                 eta(i, j, k) * 
                 (
-                M(i, j, k, 0)
-                + (flux_xlo.Momentum_normal  - flux_xhi.Momentum_normal) / DX[0] * dt
-                + (flux_ylo.Momentum_tangent - flux_yhi.Momentum_tangent) / DX[1] * dt 
-                + (mu * lap_ux)
+                    M(i, j, k, 0)
+                    + (flux_xlo.Momentum_normal  - flux_xhi.Momentum_normal) / DX[0] * dt
+                    + (flux_ylo.Momentum_tangent - flux_yhi.Momentum_tangent) / DX[1] * dt 
+                    + (mu * lap_ux) * dt
                 ) 
                 -  (M(i, j, k, 0) - rho_solid(i, j, k) * v_solid(i, j, k, 0)) * etadot(i, j, k) * dt
                 /*Update solid momentum*/   
@@ -449,7 +449,7 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 M(i, j, k, 1)
                 + (flux_xlo.Momentum_tangent - flux_xhi.Momentum_tangent) / DX[0] * dt
                 + (flux_ylo.Momentum_normal  - flux_yhi.Momentum_normal ) / DX[1] * dt
-                + (mu * lap_uy)
+                + (mu * lap_uy) * dt
                 ) 
                 - (M(i, j, k, 1) - rho_solid(i, j, k) * v_solid(i, j, k, 1)) * etadot(i, j, k) * dt
                 //*Update solid momentum*/   

@@ -85,6 +85,9 @@ vInjected.ic.type = expression
 vInjected.ic.expression.region0 = "0.005"
 vInjected.ic.expression.region1 = "0.0"
 
+q.ic.type = constant
+q.ic.constant.value = 0.0
+
 #deltapInterface.ic.type = expression
 #deltapInterface.ic.expression.region0 = "0.0"
 
@@ -104,6 +107,9 @@ Density.ic.type = expression
 Density.ic.expression.region0 = "10.0" 
 SolidDensity.ic.type = expression
 SolidDensity.ic.expression.region0 = "10.0" 
+
+SolidVelocity.ic.type = constant
+SolidVelocity.ic.constant.value = 0.005 0.0
 
 
 #rho_solid = 10.0 #kg/m^3
