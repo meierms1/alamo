@@ -6,7 +6,7 @@ alamo.program = hydro
 ### On Incline, use the high-speed storage
 #plot_file = /mmfs1/home/USERNAME/alamo_data/output
 # Specifically for JMQ:
-plot_file = /mmfs1/home/jquinlan/alamo_data/VortexShed_x_Large/output_mpi_lev_3
+plot_file = /mmfs1/home/jquinlan/alamo_data/VortexShed_x_Large/output_mpi_lev_4_ReCheck
 
 ### MESHING ###
 
@@ -19,7 +19,7 @@ amr.grid_eff = 0.8
 
 ### With these settings, 3 levels of refinement or more are needed to get von Karmann vortex street
 ### and 4 levels is a little better, but slower
-amr.max_level = 3
+amr.max_level = 4
 timestep  = 1.0e-3
 #amr.n_cell = 256 128
 amr.n_cell = 128 32
@@ -37,7 +37,7 @@ geometry.is_periodic = 0 0 0
 
 ### TIME STEP ###
 
-stop_time = 1000.0
+stop_time = 240.0
 
 ### ETA IC ###
 
@@ -55,7 +55,7 @@ q.ic.expression.region1 = "0.0"
 Ldot_active = 0.0
 
 eta.ic.type = expression
-eta.ic.expression.constant.eps   = 0.5
+eta.ic.expression.constant.eps   = 0.25
 eta.ic.expression.constant.vel_x = 0.0 
 eta.ic.expression.constant.vel_y = 0.0 
 eta.ic.expression.constant.x0    = 0.0 
@@ -64,8 +64,8 @@ eta.ic.expression.region0        = "(1.0 - 0.5*tanh((sqrt((x-x0)**2 + (y)**2) + 
 ### HYDRO PARAM ###
 
 gamma = 1.4
-cfl   = 0.4
-mu    = 0.00006
+cfl   = 0.6
+mu    = 0.6
 
 Density.ic.type = expression
 Density.ic.expression.region0 = "1.2" 
