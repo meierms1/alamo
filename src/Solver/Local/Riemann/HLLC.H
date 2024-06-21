@@ -72,6 +72,28 @@ public:
         //Compute acoustic star state
         Set::Scalar ustar = (aLag_max * uNorm_hi + aLag_min * uNorm_lo + (lo.pressure - hi.pressure)) / (aLag_max + aLag_min);
         Set::Scalar pstar = (aLag_max * lo.pressure + aLag_min * hi.pressure + aLag_min * aLag_max * (uNorm_lo - uNorm_hi)) / (aLag_max + aLag_min);
+        Set::Scalar gmm_exp = (gamma - 1.0)/(2.0*gamma);
+        Set::Scalar pstar2019 = std::pow((a_lo + a_hi - (gamma - 1.0)/2.0 * (uNorm_hi - uNorm_lo)) / (a_lo/std::pow(lo.pressure,gmm_exp) + a_hi/std::pow(hi.pressure,gmm_exp)),(1.0/gmm_exp));
+        Util::Warning(INFO, "pstar = ", pstar, " pstar2019 = ", pstar2019);
+        Set::Scalar q_lo = 0.0;
+        if (pstar2019 > lo.pressure){
+             q_lo = std::sqrt(1.0 + (gamma + 1)/(2.0*gamma)*(pstar2019/lo.pressure - 1.0));
+        } else {
+            q_lo = 1.0;
+        }
+        Set::Scalar q_hi = 0.0;
+        if (pstar2019 > hi.pressure){
+            q_hi = std::sqrt(1.0 + (gamma + 1)/(2.0*gamma)*(pstar2019/hi.pressure - 1.0));
+        } else {
+            q_hi = 1.0;
+        }
+        Util::Warning(INFO, "q_L = ", q_lo, " q_R = ", q_hi);
+        // SL = u L − a L q L
+        Set::Scalar S_lo2019 = uNorm_lo - a_lo*q_lo;
+        Set::Scalar S_hi2019 = uNorm_hi + a_hi*q_hi;
+        Util::Warning(INFO, "S_L = ", S_min, " S_R = ", S_max);
+        Util::Warning(INFO, "S_L = ", S_lo2019, " S_R = ", S_hi2019);
+        Set::Scalar S_star = (hi.pressure - lo.pressure + lo.rho * uNorm_lo*(S_lo2019 - uNorm_lo) - hi.rho * uNorm_hi*(S_hi2019 - uNorm_hi))/(lo.rho*(S_lo2019 - uNorm_lo) - hi.rho*(S_hi2019 - uNorm_hi));
 
         //Left star region variables
         Set::Scalar rstar_lo = lo.rho * (S_min - uNorm_lo) / (S_min - ustar);
