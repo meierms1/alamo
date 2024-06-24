@@ -80,7 +80,7 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
     {
         std::string type = "constant";
         // initial condition for :math:`\eta`
-        pp.query_validate("eta.ic.type", type,{"laminate","expression","bmp","png"});
+        pp.query_validate("eta.ic.type", type,{"constant","laminate","expression","bmp","png"});
         if (type == "constant") value.ic_eta = new IC::Constant(value.geom, pp, "eta.ic.constant");
         else if (type == "laminate") value.ic_eta = new IC::Laminate(value.geom, pp, "eta.ic.laminate");
         else if (type == "expression") value.ic_eta = new IC::Expression(value.geom, pp, "eta.ic.expression");

@@ -1,5 +1,5 @@
 alamo.program = sfi
-plot_file = ./output
+plot_file = ./output.allencahn
 ### On Incline, use the high-speed storage
 #plot_file = /mmfs1/home/USERNAME/alamo_data/output
 amr.plot_dt = 1.0
