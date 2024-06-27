@@ -6,7 +6,7 @@ alamo.program = hydro
 ### On Incline, use the high-speed storage
 #plot_file = /mmfs1/home/USERNAME/alamo_data/output
 # Specifically for JMQ:
-plot_file = /mmfs1/home/jquinlan/alamo_data/VortexShed_x_Large/output_mpi_lev_4_ReCheck
+plot_file = /mmfs1/home/jquinlan/alamo_data/VortexShed_x_Large/output_mpi_lev_4_ReCheck_mesh_refinement_0_55_to_0_25
 
 ### MESHING ###
 
@@ -135,8 +135,8 @@ v.bc.val.yhi = 0.0 0.0
 
 r_refinement_criterion   = 1.1
 e_refinement_criterion   = 1.1
-m_refinement_criterion   = 1.1
+m_refinement_criterion   = 0.75
 eta_refinement_criterion = 1.1
-omega_refinement_criterion = 0.55
+omega_refinement_criterion = 0.25
 
 #TODO
