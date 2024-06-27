@@ -1,0 +1,117 @@
+#@
+#@ [2d-serial]
+#@ exe=hydro
+#@ dim=2
+#@
+
+alamo.program = hydro
+
+### OUTPUT ###
+
+plot_file = output
+
+### MESHING ###
+
+amr.plot_dt = 0.01
+amr.max_grid_size = 500000
+amr.blocking_factor = 8
+amr.regrid_int = 100
+amr.grid_eff = 0.8
+
+amr.max_level = 2
+timestep  = 0.5e-3
+amr.n_cell = 64 32
+
+### DIMENSIONS ###
+geometry.prob_lo = -24.0 -12.0 0.0 # [ m ]
+geometry.prob_hi =  24.0  12.0 0.0 # [ m ]
+geometry.is_periodic = 1 0 0
+
+### TIME STEP ###
+stop_time = 1000.0
+
+### ETA IC ###
+rhoInterface.ic.type = expression
+rhoInterface.ic.expression.region0 = "0.0"
+
+vInjected.ic.type = expression
+vInjected.ic.expression.region0 = "0.0"
+vInjected.ic.expression.region1 = "0.0"
+
+q.ic.type = expression
+q.ic.expression.region0 = "0.0"
+q.ic.expression.region1 = "0.0"
+
+Ldot_active = 0.0
+
+eta.ic.type = expression
+eta.ic.expression.region0 = "1.0"
+
+### HYDRO PARAM ###
+
+gamma = 1.4
+cfl   = 0.4
+mu    = 0.1
+
+Density.ic.type = expression
+Density.ic.expression.region0 = "1.2" 
+
+SolidDensity.ic.type = expression
+SolidDensity.ic.expression.region0 = "1.2" 
+
+SolidVelocity.ic.type = expression
+SolidVelocity.ic.expression.region0 = "0.0" 
+SolidVelocity.ic.expression.region1 = "0.0" 
+
+Velocity.ic.type = expression
+Velocity.ic.expression.region0 = "-5.0 + (y>0.1*cos(x))"
+Velocity.ic.expression.region1 = "0.0"
+
+Pressure.ic.type = expression
+Pressure.ic.expression.region0 = "10.0"
+
+### ETA BC  ###
+
+pf.eta.bc.type.xlo = neumann
+pf.eta.bc.type.xhi = neumann
+pf.eta.bc.type.ylo = neumann
+pf.eta.bc.type.yhi = neumann
+pf.eta.bc.type.zlo = neumann
+pf.eta.bc.type.zhi = neumann
+
+### HYDRO BC ###
+
+rho.bc.type.xhi = neumann
+rho.bc.type.xlo = neumann
+rho.bc.type.ylo = neumann
+rho.bc.type.yhi = neumann
+
+p.bc.type.xhi = neumann
+p.bc.type.xlo = neumann
+p.bc.type.ylo = neumann
+p.bc.type.yhi = neumann
+
+v.bc.type.xhi = neumann neumann
+v.bc.type.xlo = dirichlet neumann
+v.bc.type.ylo = dirichlet dirichlet
+v.bc.type.yhi = dirichlet dirichlet
+v.bc.type.xhi = periodic periodic
+v.bc.type.xlo = periodic periodic
+
+#v.bc.val.xhi = "0.0" "0.0"
+#v.bc.val.yhi = "0.0" "0.0"
+#v.bc.val.ylo = "0.0" "0.0"
+#v.bc.val.xlo = "1b.0 + 1.0*(y>100)" "0.0"
+#v.bc.val.xlo = "1.0 + 5.0*(y>0)" "0.0"
+v.bc.val.ylo = -5.0 0.0
+v.bc.val.yhi =  5.0 0.0
+
+### HYDRO REFINEMENT CRITERIA ###
+
+r_refinement_criterion   = 1.1
+e_refinement_criterion   = 1.1
+m_refinement_criterion   = 0.1
+eta_refinement_criterion = 1.1
+omega_refinement_criterion = 0.5
+
+#TODO

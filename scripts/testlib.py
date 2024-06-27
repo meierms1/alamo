@@ -22,14 +22,14 @@ def readHeader(path):
 
 
 def validate(path, 
-            outdir,
-            vars = [],
-            start = [0,0,0],
-            end = [1,1,1],
-            axis = 2,
-            intercept = 0,
-            generate_ref_data = False,
-            reference=None,
+             outdir,
+             vars = [],
+             start = [0,0,0],
+             end = [1,1,1],
+             axis = 2,
+             intercept = 0,
+             generate_ref_data = False,
+             reference=None,
              tolerance=1E-8,
              coord = 'x'):
             
