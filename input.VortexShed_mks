@@ -19,7 +19,7 @@ amr.grid_eff = 0.8
 
 ### With these settings, 3 levels of refinement or more are needed to get von Karmann vortex street
 ### and 4 levels is a little better, but slower
-amr.max_level = 3
+amr.max_level = 4
 timestep  = 1.0e-3
 #amr.n_cell = 256 128
 amr.n_cell = 128 32
@@ -37,7 +37,7 @@ geometry.is_periodic = 0 0 0
 
 ### TIME STEP ###
 
-stop_time = 1000.0
+stop_time = 240.0
 
 ### ETA IC ###
 
@@ -55,7 +55,7 @@ q.ic.expression.region1 = "0.0"
 Ldot_active = 0.0
 
 eta.ic.type = expression
-eta.ic.expression.constant.eps   = 0.5
+eta.ic.expression.constant.eps   = 0.25
 eta.ic.expression.constant.vel_x = 0.0 
 eta.ic.expression.constant.vel_y = 0.0 
 eta.ic.expression.constant.x0    = 0.0 
@@ -65,8 +65,13 @@ eta.ic.expression.region0        = "(1.0 - 0.5*tanh((sqrt((x-x0)**2 + (y)**2) + 
 ### HYDRO PARAM ###
 
 gamma = 1.4
+<<<<<<< HEAD
+cfl   = 0.6
+mu    = 0.6
+=======
 cfl   = 0.4
 mu    = 0.5
+>>>>>>> 03776b451bd88dc6a93b525f2f0374a665e04ec6
 
 Density.ic.type = expression
 Density.ic.expression.region0 = "1.2" 
@@ -134,10 +139,18 @@ v.bc.val.yhi = 0.0 0.0
 
 ### HYDRO REFINEMENT CRITERIA ###
 
+<<<<<<< HEAD
+r_refinement_criterion   = 1.1
+e_refinement_criterion   = 1.1
+m_refinement_criterion   = 0.75
+eta_refinement_criterion = 1.1
+omega_refinement_criterion = 0.25
+=======
 r_refinement_criterion   = 10.1
 e_refinement_criterion   = 10.1
 m_refinement_criterion   = 10.1
 eta_refinement_criterion = 0.1
 omega_refinement_criterion = 2.5
+>>>>>>> 03776b451bd88dc6a93b525f2f0374a665e04ec6
 
 #TODO
