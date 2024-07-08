@@ -1,4 +1,4 @@
-#@ [1D-Roe]
+#@ [Roe]
 #@ exe=hydro
 #@ dim=2
 
@@ -7,7 +7,7 @@ alamo.program = hydro
 
 ### OUTPUT ###
 
-plot_file = ./tests/Riemann1DShockTubeRoe/output
+plot_file = ./tests/RiemannShockTube/output
 
 ### MESHING ###
 
