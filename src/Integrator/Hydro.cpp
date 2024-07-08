@@ -42,27 +42,30 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
         // viscosity
         pp.query_required("mu", value.mu);
 
-        value.bc_rho = new BC::Constant(1, pp, "rho.bc");
-        value.bc_p = new BC::Constant(1, pp, "p.bc");
-        value.bc_v = new BC::Constant(2, pp, "v.bc");
-        value.bc_eta = new BC::Constant(1, pp, "pf.eta.bc");
+        pp_forbid("rho.bc","replaced with density.bc");
+        value.density_bc = new BC::Constant(1, pp, "density.bc");
+        pp_forbid("p.bc","replaced with pressure.bc");
+        value.pressure_bc = new BC::Constant(1, pp, "pressure.bc");
+        pp_forbid("v.bc","replaced with velocity.bc");
+        value.velocity_bc = new BC::Constant(2, pp, "velocity.bc");
+        value.eta_bc = new BC::Constant(1, pp, "pf.eta.bc");
     }
     // Register FabFields:
     {
         int nghost = 2;
 
-        value.RegisterNewFab(value.eta_mf,           value.bc_eta,     1, nghost, "eta",          true );
-        value.RegisterNewFab(value.eta_old_mf,       value.bc_eta,     1, nghost, "eta_old",      false);
-        value.RegisterNewFab(value.etadot_mf,        value.bc_eta,     1, nghost, "etadot",       true );
-        value.RegisterNewFab(value.density_mf,       value.bc_rho,     1, nghost, "density",      true );
-        value.RegisterNewFab(value.density_old_mf,   value.bc_rho,     1, nghost, "rho_old",      false);
+        value.RegisterNewFab(value.eta_mf,           value.eta_bc,     1, nghost, "eta",          true );
+        value.RegisterNewFab(value.eta_old_mf,       value.eta_bc,     1, nghost, "eta_old",      false);
+        value.RegisterNewFab(value.etadot_mf,        value.eta_bc,     1, nghost, "etadot",       true );
+        value.RegisterNewFab(value.density_mf,       value.density_bc, 1, nghost, "density",      true );
+        value.RegisterNewFab(value.density_old_mf,   value.density_bc, 1, nghost, "rho_old",      false);
         value.RegisterNewFab(value.energy_mf,       &value.bc_nothing, 1, nghost, "energy",       true );
         value.RegisterNewFab(value.energy_old_mf,   &value.bc_nothing, 1, nghost, "energy_old" ,  false);
         value.RegisterNewFab(value.momentum_mf,     &value.bc_nothing, 2, nghost, "momentum",     true );
         value.RegisterNewFab(value.momentum_old_mf, &value.bc_nothing, 2, nghost, "momentum_old", false);
-        value.RegisterNewFab(value.velocity_mf,      value.bc_v,       2, nghost, "velocity",     true );
+        value.RegisterNewFab(value.velocity_mf,      value.velocity_bc,2, nghost, "velocity",     true );
         value.RegisterNewFab(value.vorticity_mf,    &value.bc_nothing, 1, nghost, "vorticity",    true );
-        value.RegisterNewFab(value.pressure_mf,      value.bc_p,       1, nghost, "pressure",     true );
+        value.RegisterNewFab(value.pressure_mf,      value.pressure_bc,1, nghost, "pressure",     true );
         value.RegisterNewFab(value.vInjected_mf,    &value.bc_nothing, 2, nghost, "vInjected",    true );
         value.RegisterNewFab(value.rhoInterface_mf, &value.bc_nothing, 1, nghost, "rhoInterface", true );
         value.RegisterNewFab(value.q_mf,            &value.bc_nothing, 2, nghost, "q",            true );
@@ -84,9 +87,7 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
     }
     {
         std::string type;
-        pp_forbid("Velocity.ic.type","replaced with velocity.ic.type");
-        pp_forbid("Velocity.ic.constant","replaced with velocity.ic.constant");
-        pp_forbid("Velocity.ic.expression","replaced with velocity.ic.expression");
+        pp_forbid("Velocity.ic","replaced with velocity.ic");
         // initial condition for velocity
         pp.query_validate("velocity.ic.type", type,{"constant","expression"});
         if (type == "constant") value.velocity_ic = new IC::Constant(value.geom, pp, "velocity.ic.constant");
@@ -153,6 +154,11 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
         pp.query_validate("q.ic.type", type,{"constant","expression"}); 
         if (type == "constant") value.ic_q = new IC::Constant(value.geom, pp, "q.ic.constant");
         else if (type == "expression") value.ic_q = new IC::Expression(value.geom, pp, "q.ic.expression");
+    }
+
+    if (pp.AnyUnusedInputs())
+    {
+        Util::Exception(INFO,"Exiting due to unused inputs");
     }
 }
 

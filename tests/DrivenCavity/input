@@ -53,22 +53,22 @@ gamma = 1.4
 cfl   = 0.4
 mu    = 20.0
 
-Density.ic.type = expression
-Density.ic.expression.region0 = "1.2" 
+density.ic.type = expression
+density.ic.expression.region0 = "1.2" 
 
-SolidDensity.ic.type = expression
-SolidDensity.ic.expression.region0 = "1.2" 
+solid.density.ic.type = expression
+solid.density.ic.expression.region0 = "1.2" 
 
-SolidVelocity.ic.type = expression
-SolidVelocity.ic.expression.region0 = "0.0" 
-SolidVelocity.ic.expression.region1 = "0.0" 
+solid.velocity.ic.type = expression
+solid.velocity.ic.expression.region0 = "0.0" 
+solid.velocity.ic.expression.region1 = "0.0" 
 
-Velocity.ic.type = expression
-Velocity.ic.expression.region0 = "0.0"
-Velocity.ic.expression.region1 = "0.0"
+velocity.ic.type = expression
+velocity.ic.expression.region0 = "0.0"
+velocity.ic.expression.region1 = "0.0"
 
-Pressure.ic.type = expression
-Pressure.ic.expression.region0 = "103320.0"
+pressure.ic.type = expression
+pressure.ic.expression.region0 = "103320.0"
 
 ### ETA BC  ###
 
@@ -81,24 +81,24 @@ pf.eta.bc.type.zhi = neumann
 
 ### HYDRO BC ###
 
-rho.bc.type.xhi = neumann
-rho.bc.type.xlo = neumann
-rho.bc.type.ylo = neumann
-rho.bc.type.yhi = neumann
+density.bc.type.xhi = neumann
+density.bc.type.xlo = neumann
+density.bc.type.ylo = neumann
+density.bc.type.yhi = neumann
 
-p.bc.type.xhi = neumann
-p.bc.type.xlo = neumann
-p.bc.type.ylo = neumann
-p.bc.type.yhi = neumann
+pressure.bc.type.xhi = neumann
+pressure.bc.type.xlo = neumann
+pressure.bc.type.ylo = neumann
+pressure.bc.type.yhi = neumann
 
-v.bc.type.xhi = dirichlet dirichlet
-v.bc.type.xlo = dirichlet dirichlet
-v.bc.type.ylo = dirichlet dirichlet
-v.bc.type.yhi = dirichlet dirichlet
-v.bc.val.xhi = 0.0 0.0
-v.bc.val.xlo = 0.0 0.0
-v.bc.val.ylo = 0.0 0.0
-v.bc.val.yhi = 500.0 0.0
+velocity.bc.type.xhi = dirichlet dirichlet
+velocity.bc.type.xlo = dirichlet dirichlet
+velocity.bc.type.ylo = dirichlet dirichlet
+velocity.bc.type.yhi = dirichlet dirichlet
+velocity.bc.val.xhi = 0.0 0.0
+velocity.bc.val.xlo = 0.0 0.0
+velocity.bc.val.ylo = 0.0 0.0
+velocity.bc.val.yhi = 500.0 0.0
 
 ### HYDRO REFINEMENT CRITERIA ###
 

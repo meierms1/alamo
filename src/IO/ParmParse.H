@@ -141,6 +141,11 @@ public:
         {
             Util::ParmParseException(INFO,file,func,line,full(name),full(name)," forbidden: ", explanation);
         }
+        std::set<std::string> subs = amrex::ParmParse::getEntries(name);
+        if (subs.size())
+        {
+            Util::ParmParseException(INFO,file,func,line,full(name),full(name)," forbidden: ", explanation);
+        }
     }
 
     template<typename T> 

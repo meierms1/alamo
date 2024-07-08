@@ -30,12 +30,10 @@ public:
     static void Parse(Hydro& value, IO::ParmParse& pp);
     virtual ~Hydro()
     {
-        delete bc_rho;
-        delete bc_E;
-        delete bc_M;
-        delete bc_v;
-        delete bc_p;
-        delete bc_eta;
+        delete density_bc;
+        delete velocity_bc;
+        delete pressure_bc;
+        delete eta_bc;
 
         delete velocity_ic;
         delete pressure_ic;
@@ -100,12 +98,10 @@ private:
     Set::Field<Set::Scalar> q_mf;
     Set::Field<Set::Scalar> Source_mf;
 
-    BC::BC<Set::Scalar>* bc_rho = nullptr;
-    BC::BC<Set::Scalar>* bc_E = nullptr;
-    BC::BC<Set::Scalar>* bc_M = nullptr;
-    BC::BC<Set::Scalar>* bc_v = nullptr;
-    BC::BC<Set::Scalar>* bc_p = nullptr;
-    BC::BC<Set::Scalar>* bc_eta = nullptr;
+    BC::BC<Set::Scalar>* density_bc = nullptr;
+    BC::BC<Set::Scalar>* velocity_bc = nullptr;
+    BC::BC<Set::Scalar>* pressure_bc = nullptr;
+    BC::BC<Set::Scalar>* eta_bc = nullptr;
 
     IC::IC* velocity_ic = nullptr;
     IC::IC* pressure_ic = nullptr;

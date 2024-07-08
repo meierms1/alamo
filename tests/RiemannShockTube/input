@@ -85,7 +85,6 @@ solid.density.ic.constant.value = 0.0
 solid.velocity.ic.type = constant
 solid.velocity.ic.constant.value = 0.0 0.0
 
-
 ### ETA BC  ###
 
 pf.eta.bc.type.xlo = neumann
@@ -95,20 +94,18 @@ pf.eta.bc.type.yhi = neumann
 
 ### HYDRO BC ###
 
-rho.bc.type.xhi = neumann
-rho.bc.type.xlo = neumann
-rho.bc.type.ylo = neumann
-rho.bc.type.yhi = neumann
-
-p.bc.type.xhi = neumann
-p.bc.type.xlo = neumann
-p.bc.type.ylo = neumann
-p.bc.type.yhi = neumann
-
-v.bc.type.xhi = neumann neumann
-v.bc.type.xlo = neumann neumann
-v.bc.type.ylo = neumann neumann
-v.bc.type.yhi = neumann neumann
+density.bc.type.xhi = neumann
+density.bc.type.xlo = neumann
+density.bc.type.ylo = neumann
+density.bc.type.yhi = neumann
+pressure.bc.type.xhi = neumann
+pressure.bc.type.xlo = neumann
+pressure.bc.type.ylo = neumann
+pressure.bc.type.yhi = neumann
+velocity.bc.type.xhi = neumann neumann
+velocity.bc.type.xlo = neumann neumann
+velocity.bc.type.ylo = neumann neumann
+velocity.bc.type.yhi = neumann neumann
 
 ### HYDRO REFINEMENT CRITERIA ###
 
