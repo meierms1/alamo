@@ -51,29 +51,24 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
     {
         int nghost = 2;
 
-        value.RegisterNewFab(value.eta_mf,     value.bc_eta, 1, nghost, "eta",     true );
-        value.RegisterNewFab(value.eta_old_mf, value.bc_eta, 1, nghost, "eta_old", false);
-        value.RegisterNewFab(value.etadot_mf,  value.bc_eta, 1, nghost, "etadot",  true );
+        value.RegisterNewFab(value.eta_mf,           value.bc_eta,     1, nghost, "eta",          true );
+        value.RegisterNewFab(value.eta_old_mf,       value.bc_eta,     1, nghost, "eta_old",      false);
+        value.RegisterNewFab(value.etadot_mf,        value.bc_eta,     1, nghost, "etadot",       true );
+        value.RegisterNewFab(value.density_mf,       value.bc_rho,     1, nghost, "density",      true );
+        value.RegisterNewFab(value.density_old_mf,   value.bc_rho,     1, nghost, "rho_old",      false);
+        value.RegisterNewFab(value.energy_mf,       &value.bc_nothing, 1, nghost, "energy",       true );
+        value.RegisterNewFab(value.energy_old_mf,   &value.bc_nothing, 1, nghost, "energy_old" ,  false);
+        value.RegisterNewFab(value.momentum_mf,     &value.bc_nothing, 2, nghost, "momentum",     true );
+        value.RegisterNewFab(value.momentum_old_mf, &value.bc_nothing, 2, nghost, "momentum_old", false);
+        value.RegisterNewFab(value.velocity_mf,      value.bc_v,       2, nghost, "velocity",     true );
+        value.RegisterNewFab(value.vorticity_mf,    &value.bc_nothing, 1, nghost, "vorticity",    true );
+        value.RegisterNewFab(value.pressure_mf,      value.bc_p,       1, nghost, "pressure",     true );
+        value.RegisterNewFab(value.vInjected_mf,    &value.bc_nothing, 2, nghost, "vInjected",    true );
+        value.RegisterNewFab(value.rhoInterface_mf, &value.bc_nothing, 1, nghost, "rhoInterface", true );
+        value.RegisterNewFab(value.q_mf,            &value.bc_nothing, 2, nghost, "q",            true );
 
-        value.RegisterNewFab(value.Density_mf,     value.bc_rho, 1, nghost, "Density", true );
-        value.RegisterNewFab(value.Density_old_mf, value.bc_rho, 1, nghost, "rho_old", false);
-
-        value.RegisterNewFab(value.Energy_mf,     &value.bc_nothing, 1, nghost, "Energy", true );
-        value.RegisterNewFab(value.Energy_old_mf, &value.bc_nothing, 1, nghost, "E_old" , false);
-
-        value.RegisterNewFab(value.Momentum_mf,     &value.bc_nothing, 2, nghost, "Momentum", true );
-        value.RegisterNewFab(value.Momentum_old_mf, &value.bc_nothing, 2, nghost, "M_old",    false);
-
-        value.RegisterNewFab(value.Velocity_mf,    value.bc_v,       2, nghost, "Velocity",  true);
-        value.RegisterNewFab(value.Vorticity_mf,  &value.bc_nothing, 1, nghost, "Vorticity", true);
-        value.RegisterNewFab(value.Pressure_mf,    value.bc_p,       1, nghost, "Pressure",  true);
-
-        value.RegisterNewFab(value.vInjected_mf,    &value.bc_nothing, 2, nghost, "vInjected",    true);
-        value.RegisterNewFab(value.rhoInterface_mf, &value.bc_nothing, 1, nghost, "rhoInterface", true);
-        value.RegisterNewFab(value.q_mf,            &value.bc_nothing, 2, nghost, "q",            true);
-
-        value.RegisterNewFab(value.SolidVelocity_mf, &value.bc_nothing, 2, nghost, "SolidVelocity",  true);
-        value.RegisterNewFab(value.SolidDensity_mf,  &value.bc_nothing, 1, nghost, "SolidDensity",  true);
+        value.RegisterNewFab(value.solid.velocity_mf, &value.bc_nothing, 2, nghost, "solid.velocity",  true);
+        value.RegisterNewFab(value.solid.density_mf,  &value.bc_nothing, 1, nghost, "solid.density",  true);
 
         value.RegisterNewFab(value.Source_mf, &value.bc_nothing, 4, nghost, "Source", true);
     }
@@ -81,48 +76,61 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
         std::string type = "constant";
         // initial condition for :math:`\eta`
         pp.query_validate("eta.ic.type", type,{"constant","laminate","expression","bmp","png"});
-        if (type == "constant") value.ic_eta = new IC::Constant(value.geom, pp, "eta.ic.constant");
-        else if (type == "laminate") value.ic_eta = new IC::Laminate(value.geom, pp, "eta.ic.laminate");
-        else if (type == "expression") value.ic_eta = new IC::Expression(value.geom, pp, "eta.ic.expression");
-        else if (type == "bmp") value.ic_eta = new IC::BMP(value.geom, pp, "eta.ic.bmp");
-        else if (type == "png") value.ic_eta = new IC::PNG(value.geom, pp, "eta.ic.png");
+        if (type == "constant") value.eta_ic = new IC::Constant(value.geom, pp, "eta.ic.constant");
+        else if (type == "laminate") value.eta_ic = new IC::Laminate(value.geom, pp, "eta.ic.laminate");
+        else if (type == "expression") value.eta_ic = new IC::Expression(value.geom, pp, "eta.ic.expression");
+        else if (type == "bmp") value.eta_ic = new IC::BMP(value.geom, pp, "eta.ic.bmp");
+        else if (type == "png") value.eta_ic = new IC::PNG(value.geom, pp, "eta.ic.png");
     }
     {
         std::string type;
+        pp_forbid("Velocity.ic.type","replaced with velocity.ic.type");
+        pp_forbid("Velocity.ic.constant","replaced with velocity.ic.constant");
+        pp_forbid("Velocity.ic.expression","replaced with velocity.ic.expression");
         // initial condition for velocity
-        pp.query_validate("Velocity.ic.type", type,{"constant","expression"});
-        if (type == "constant") value.ic_Velocity = new IC::Constant(value.geom, pp, "Velocity.ic.constant");
-        else if (type == "expression") value.ic_Velocity = new IC::Expression(value.geom, pp, "Velocity.ic.expression");
+        pp.query_validate("velocity.ic.type", type,{"constant","expression"});
+        if (type == "constant") value.velocity_ic = new IC::Constant(value.geom, pp, "velocity.ic.constant");
+        else if (type == "expression") value.velocity_ic = new IC::Expression(value.geom, pp, "velocity.ic.expression");
         else Util::Abort(INFO, "Invalid Velocity.ic: ", type);
     }
     {
         std::string type = "constant";
+        pp_forbid("Pressure.ic.type","replaced with pressure.ic.type");
+        pp_forbid("Pressure.ic.constant","replaced with pressure.ic.constant");
+        pp_forbid("Pressure.ic.expression","replaced with pressure.ic.expression");
         // initial condition for pressure
-        pp.query_validate("Pressure.ic.type", type, {"constant","expression"});
-        if (type == "constant") value.ic_Pressure = new IC::Constant(value.geom, pp, "Pressure.ic.constant");
-        else if (type == "expression") value.ic_Pressure = new IC::Expression(value.geom, pp, "Pressure.ic.expression");
+        pp.query_validate("pressure.ic.type", type, {"constant","expression"});
+        if (type == "constant") value.pressure_ic = new IC::Constant(value.geom, pp, "pressure.ic.constant");
+        else if (type == "expression") value.pressure_ic = new IC::Expression(value.geom, pp, "pressure.ic.expression");
         else Util::Abort(INFO, "Invalid Pressure.ic: ", type);
     }
     {
         std::string type = "constant";
+        pp_forbid("SolidVelocity.ic.type","replaced by solid.velocity.ic.type");
         // initial condition for velocity in the solid phase
-        pp.query_validate("SolidVelocity.ic.type", type, {"constant","expression"}, false);
-        if (type == "constant") value.ic_SolidVelocity = new IC::Constant(value.geom, pp, "SolidVelocity.ic.constant");
-        else if (type == "expression") value.ic_SolidVelocity = new IC::Expression(value.geom, pp, "SolidVelocity.ic.expression");
+        pp.query_validate("solid.velocity.ic.type", type, {"constant","expression"}, false);
+        if (type == "constant") value.solid.velocity_ic = new IC::Constant(value.geom, pp, "solid.velocity.ic.constant");
+        else if (type == "expression") value.solid.velocity_ic = new IC::Expression(value.geom, pp, "solid.velocity.ic.expression");
     }
     {
         std::string type;
+        pp_forbid("SolidDensity.ic.type","replaced by solid.density.ic.type");
+        pp_forbid("SolidDensity.ic.constant","replaced by solid.density.ic.constant");
+        pp_forbid("SolidDensity.ic.expression","replaced by solid.density.ic.expression");
         // initial condition for density in the solid phase
-        pp.query_validate("SolidDensity.ic.type", type,{"constant","expression"});
-        if (type == "constant") value.ic_SolidDensity = new IC::Constant(value.geom, pp, "SolidDensity.ic.constant");
-        else if (type == "expression") value.ic_SolidDensity = new IC::Expression(value.geom, pp, "SolidDensity.ic.expression");
+        pp.query_validate("solid.density.ic.type", type,{"constant","expression"});
+        if (type == "constant") value.solid.density_ic = new IC::Constant(value.geom, pp, "solid.density.ic.constant");
+        else if (type == "expression") value.solid.density_ic = new IC::Expression(value.geom, pp, "solid.density.ic.expression");
     }
     {
         std::string type;
+        pp_forbid("Density.ic.type","replaced with density.ic.type");
+        pp_forbid("Density.ic.constant","replaced with density.ic.constant");
+        pp_forbid("Density.ic.expression","replaced with density.ic.expression");
         // initial condition for density
-        pp.query_validate("Density.ic.type", type, {"constant","expression"});
-        if (type == "constant") value.ic_Density = new IC::Constant(value.geom, pp, "Density.ic.constant");
-        else if (type == "expression") value.ic_Density = new IC::Expression(value.geom, pp, "Density.ic.expression");
+        pp.query_validate("density.ic.type", type, {"constant","expression"});
+        if (type == "constant") value.density_ic = new IC::Constant(value.geom, pp, "density.ic.constant");
+        else if (type == "expression") value.density_ic = new IC::Expression(value.geom, pp, "density.ic.expression");
     }
     {
         std::string type;
@@ -153,16 +161,16 @@ void Hydro::Initialize(int lev)
 {
     BL_PROFILE("Integrator::Hydro::Initialize");
  
-    ic_eta           ->Initialize(lev, eta_mf,     0.0);
-    ic_eta           ->Initialize(lev, eta_old_mf, 0.0);
+    eta_ic           ->Initialize(lev, eta_mf,     0.0);
+    eta_ic           ->Initialize(lev, eta_old_mf, 0.0);
     etadot_mf[lev]   ->setVal(0.0);
 
-    ic_Velocity      ->Initialize(lev, Velocity_mf, 0.0);
-    ic_Pressure      ->Initialize(lev, Pressure_mf, 0.0);
-    ic_Density       ->Initialize(lev, Density_mf, 0.0);
+    velocity_ic      ->Initialize(lev, velocity_mf, 0.0);
+    pressure_ic      ->Initialize(lev, pressure_mf, 0.0);
+    density_ic       ->Initialize(lev, density_mf, 0.0);
 
-    ic_SolidVelocity ->Initialize(lev, SolidVelocity_mf, 0.0);
-    ic_SolidDensity  ->Initialize(lev, SolidDensity_mf, 0.0);
+    solid.velocity_ic ->Initialize(lev, solid.velocity_mf, 0.0);
+    solid.density_ic  ->Initialize(lev, solid.density_mf, 0.0);
 
     ic_rhoInterface  ->Initialize(lev, rhoInterface_mf, 0.0);
     ic_vInjected     ->Initialize(lev, vInjected_mf,    0.0);
@@ -181,20 +189,20 @@ void Hydro::Mix(int lev)
     {
         const amrex::Box& bx = mfi.validbox();
 
-        amrex::Array4<Set::Scalar> const& E_old = (*Energy_old_mf[lev]).array(mfi);
-        amrex::Array4<Set::Scalar> const& E = (*Energy_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& E_old = (*energy_old_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& E = (*energy_mf[lev]).array(mfi);
 
-        amrex::Array4<Set::Scalar> const& rho_old = (*Density_old_mf[lev]).array(mfi);
-        amrex::Array4<Set::Scalar> const& rho = (*Density_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& rho_old = (*density_old_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& rho = (*density_mf[lev]).array(mfi);
 
-        amrex::Array4<Set::Scalar> const& M_old = (*Momentum_old_mf[lev]).array(mfi);
-        amrex::Array4<Set::Scalar> const& M = (*Momentum_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& M_old = (*momentum_old_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& M = (*momentum_mf[lev]).array(mfi);
 
-        amrex::Array4<const Set::Scalar> const& v = (*Velocity_mf[lev]).array(mfi);
-        amrex::Array4<const Set::Scalar> const& p = (*Pressure_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& v = (*velocity_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& p = (*pressure_mf[lev]).array(mfi);
 
-        amrex::Array4<const Set::Scalar> const& rho_solid = (*SolidDensity_mf[lev]).array(mfi);
-        amrex::Array4<const Set::Scalar> const& v_solid   = (*SolidVelocity_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& rho_solid = (*solid.density_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& v_solid   = (*solid.velocity_mf[lev]).array(mfi);
 
         amrex::Array4<const Set::Scalar> const& eta = (*eta_mf[lev]).array(mfi);
 
@@ -226,7 +234,7 @@ void Hydro::Mix(int lev)
 
 void Hydro::UpdateEta(int lev, Set::Scalar time)
 {
-    ic_eta->Initialize(lev, eta_mf, time);
+    eta_ic->Initialize(lev, eta_mf, time);
 }
 
 void Hydro::TimeStepBegin(Set::Scalar, int /*iter*/)
@@ -264,8 +272,8 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
         amrex::Array4<const Set::Scalar> const& eta = (*eta_old_mf[lev]).array(mfi);
         amrex::Array4<Set::Scalar>       const& etadot = (*etadot_mf[lev]).array(mfi);
 
-        Set::Patch<Set::Scalar>       omega = Vorticity_mf.Patch(lev,mfi);
-        Set::Patch<const Set::Scalar> v     = Velocity_mf.Patch(lev,mfi);
+        Set::Patch<Set::Scalar>       omega = vorticity_mf.Patch(lev,mfi);
+        Set::Patch<const Set::Scalar> v     = velocity_mf.Patch(lev,mfi);
         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
 
@@ -280,20 +288,20 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
         
     }
 
-    std::swap(Momentum_old_mf[lev], Momentum_mf[lev]);
-    std::swap(Energy_old_mf[lev],   Energy_mf[lev]);
-    std::swap(Density_old_mf[lev],  Density_mf[lev]);
+    std::swap(momentum_old_mf[lev], momentum_mf[lev]);
+    std::swap(energy_old_mf[lev],   energy_mf[lev]);
+    std::swap(density_old_mf[lev],  density_mf[lev]);
 
     for (amrex::MFIter mfi(*eta_mf[lev], false); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.validbox();
 
-        amrex::Array4< Set::Scalar> const& rho = (*Density_old_mf[lev]).array(mfi);
-        amrex::Array4< Set::Scalar> const& E   = (*Energy_old_mf[lev]).array(mfi);
-        amrex::Array4< Set::Scalar> const& M   = (*Momentum_old_mf[lev]).array(mfi);
+        amrex::Array4< Set::Scalar> const& rho = (*density_old_mf[lev]).array(mfi);
+        amrex::Array4< Set::Scalar> const& E   = (*energy_old_mf[lev]).array(mfi);
+        amrex::Array4< Set::Scalar> const& M   = (*momentum_old_mf[lev]).array(mfi);
 
-        amrex::Array4<Set::Scalar> const& v = (*Velocity_mf[lev]).array(mfi);
-        amrex::Array4<Set::Scalar> const& p = (*Pressure_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& v = (*velocity_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& p = (*pressure_mf[lev]).array(mfi);
 
         amrex::Array4<const Set::Scalar> const& rhoInterface = (*rhoInterface_mf[lev]).array(mfi);
         amrex::Array4<const Set::Scalar> const& q            = (*q_mf[lev]).array(mfi);
@@ -363,22 +371,22 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
     {
         const amrex::Box& bx = mfi.validbox();
 
-        amrex::Array4<const Set::Scalar> const& E   = (*Energy_old_mf[lev]).array(mfi);
-        amrex::Array4<const Set::Scalar> const& rho = (*Density_old_mf[lev]).array(mfi);
-        amrex::Array4<const Set::Scalar> const& M   = (*Momentum_old_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& E   = (*energy_old_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& rho = (*density_old_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& M   = (*momentum_old_mf[lev]).array(mfi);
 
         amrex::Array4<const Set::Scalar> const& eta    = (*eta_old_mf[lev]).array(mfi);
         amrex::Array4<const Set::Scalar> const& etadot = (*etadot_mf[lev]).array(mfi);
 
-        amrex::Array4<Set::Scalar> const& E_new   = (*Energy_mf[lev]).array(mfi);
-        amrex::Array4<Set::Scalar> const& rho_new = (*Density_mf[lev]).array(mfi);
-        amrex::Array4<Set::Scalar> const& M_new   = (*Momentum_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& E_new   = (*energy_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& rho_new = (*density_mf[lev]).array(mfi);
+        amrex::Array4<Set::Scalar> const& M_new   = (*momentum_mf[lev]).array(mfi);
 
-        amrex::Array4<const Set::Scalar> const& v = (*Velocity_mf[lev]).array(mfi);
-        amrex::Array4<const Set::Scalar> const& p = (*Pressure_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& v = (*velocity_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& p = (*pressure_mf[lev]).array(mfi);
 
-        amrex::Array4<const Set::Scalar> const& rho_solid = (*SolidDensity_mf[lev]).array(mfi);
-        amrex::Array4<const Set::Scalar> const& v_solid   = (*SolidVelocity_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& rho_solid = (*solid.density_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& v_solid   = (*solid.velocity_mf[lev]).array(mfi);
 
 
         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -416,9 +424,9 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 /*Update fluid energy*/
                 eta(i, j, k) * 
                 (
-                    (flux_xlo.Energy - flux_xhi.Energy) / DX[0]
+                    (flux_xlo.energy - flux_xhi.energy) / DX[0]
                     +
-                    (flux_ylo.Energy - flux_yhi.Energy) / DX[1]
+                    (flux_ylo.energy - flux_yhi.energy) / DX[1]
                     ///////////+ 2. * mu * (div_u * div_u + div_u * symgrad_u) - 2./3. * mu * div_u * div_u;
                 ) * dt 
 
@@ -435,9 +443,9 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 /*Update fluid density*/
                 + eta(i, j, k) * 
                 (
-                    (flux_xlo.Mass - flux_xhi.Mass) / DX[0]
+                    (flux_xlo.mass - flux_xhi.mass) / DX[0]
                     +
-                    (flux_ylo.Mass - flux_yhi.Mass) / DX[1]
+                    (flux_ylo.mass - flux_yhi.mass) / DX[1]
                 ) * dt 
 
                 // Transient
@@ -453,9 +461,9 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 /*Update fluid momentum*/
                 + eta(i, j, k) * 
                 (
-                    (flux_xlo.Momentum_normal  - flux_xhi.Momentum_normal) / DX[0] 
+                    (flux_xlo.momentum_normal  - flux_xhi.momentum_normal) / DX[0] 
                     +
-                    (flux_ylo.Momentum_tangent - flux_yhi.Momentum_tangent) / DX[1] 
+                    (flux_ylo.momentum_tangent - flux_yhi.momentum_tangent) / DX[1] 
                     +
                     (mu * lap_ux) 
                 )*dt
@@ -472,9 +480,9 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 /*Update fluid momentum*/
                 + eta(i, j, k) * 
                 (
-                    (flux_xlo.Momentum_tangent - flux_xhi.Momentum_tangent) / DX[0]
+                    (flux_xlo.momentum_tangent - flux_xhi.momentum_tangent) / DX[0]
                     +
-                    (flux_ylo.Momentum_normal  - flux_yhi.Momentum_normal ) / DX[1]
+                    (flux_ylo.momentum_normal  - flux_yhi.momentum_normal ) / DX[1]
                     +
                     (mu * lap_uy)
                 ) * dt
@@ -527,10 +535,10 @@ void Hydro::TagCellsForRefinement(int lev, amrex::TagBoxArray& a_tags, Set::Scal
     }
 
     // Vorticity criterion for refinement
-    for (amrex::MFIter mfi(*Vorticity_mf[lev], true); mfi.isValid(); ++mfi) {
+    for (amrex::MFIter mfi(*vorticity_mf[lev], true); mfi.isValid(); ++mfi) {
         const amrex::Box& bx = mfi.tilebox();
         amrex::Array4<char> const& tags = a_tags.array(mfi);
-        amrex::Array4<const Set::Scalar> const& omega = (*Vorticity_mf[lev]).array(mfi);
+        amrex::Array4<const Set::Scalar> const& omega = (*vorticity_mf[lev]).array(mfi);
 
         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
             Set::Vector grad_omega = Numeric::Gradient(omega, i, j, k, 0, DX);
@@ -562,8 +570,8 @@ void Hydro::TagCellsForRefinement(int lev, amrex::TagBoxArray& a_tags, Set::Scal
 //    for (int lev = 0; lev <= finest_level; ++lev)
 //    {
 //      eta_mf[lev] -> FillBoundary();
-//      Density_mf[lev] -> FillBoundary();
-//      Energy_mf[lev] -> FillBoundary();
+//      density_mf[lev] -> FillBoundary();
+//      energy_mf[lev] -> FillBoundary();
 //      Momentum[lev] -> FillBoundary();
 //      
 //      for (MFIter mfi(*model_mf[lev], amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)

@@ -33,10 +33,10 @@ public:
     };
 
     struct Flux {
-        Set::Scalar Mass;
-        Set::Scalar Energy;
-        Set::Scalar Momentum_normal;
-        Set::Scalar Momentum_tangent;
+        Set::Scalar mass;
+        Set::Scalar momentum_normal;
+        Set::Scalar momentum_tangent;
+        Set::Scalar energy;
     };
 
     // todo: convert to static functor by replacing with static () when c++23 is released
@@ -92,19 +92,19 @@ public:
         //
         Flux fl;
         
-        fl.Mass =
+        fl.mass =
             rho_L*u_L
             + std::min(0.0,lambda1)*deltav1
             + (0.5*rho_RL/a_RL)*(   std::min(0.0,lambda2)*deltav2 -
                                     std::min(0.0,lambda3)*deltav3);
         
-        fl.Momentum_normal =
+        fl.momentum_normal =
             rho_L*u_L*u_L + p_L
             + u_RL*std::min(0.0,lambda1)*deltav1
             + (0.5*rho_RL/a_RL)*(   lambda2*std::min(0.0,lambda2)*deltav2 -
                                     lambda3*std::min(0.0,lambda3)*deltav3);
         
-        fl.Energy =
+        fl.energy =
             rho_L*h_TL*u_L
             + 0.5*u_RL*u_RL*std::min(0.0,lambda1)*deltav1
             + (0.5*rho_RL/a_RL)*(   (h_RL + a_RL*u_RL)*std::min(0.0,lambda2)*deltav2 -
@@ -113,7 +113,7 @@ public:
         //
         // (Update the tangential momentum flux)
         //
-        fl.Momentum_tangent = 0.5 * (rho_L*u_L*v_L + rho_R*u_R*v_R);
+        fl.momentum_tangent = 0.5 * (rho_L*u_L*v_L + rho_R*u_R*v_R);
 
 
         return fl;
@@ -177,10 +177,10 @@ public:
 
             
 
-            if (fabs(zero.Mass) > 1E-10) { Util::Warning(INFO, "Nonzero mass flux ", zero.Mass); failed++; }
-            if (fabs(zero.Momentum_normal) > 1E-10) { Util::Warning(INFO, "Nonzero x.momentum flux ", zero.Momentum_normal); failed++; }
-            if (fabs(zero.Momentum_tangent) > 1E-10) { Util::Warning(INFO, "Nonzero y.momentum flux ", zero.Momentum_tangent); failed++; }
-            if (fabs(zero.Energy) > 1E-10) { Util::Warning(INFO, "Nonzero.pressure flux ", zero.Energy); failed++; }
+            if (fabs(zero.mass) > 1E-10) { Util::Warning(INFO, "Nonzero mass flux ", zero.mass); failed++; }
+            if (fabs(zero.momentum_normal) > 1E-10) { Util::Warning(INFO, "Nonzero x.momentum flux ", zero.momentum_normal); failed++; }
+            if (fabs(zero.momentum_tangent) > 1E-10) { Util::Warning(INFO, "Nonzero y.momentum flux ", zero.momentum_tangent); failed++; }
+            if (fabs(zero.energy) > 1E-10) { Util::Warning(INFO, "Nonzero.pressure flux ", zero.energy); failed++; }
 
             // 
             // Antisymmetry test: reversing hi and lo should produce the same
@@ -190,24 +190,24 @@ public:
             Flux plus = Solve(hi, lo, 1.4);
             Flux minus = Solve(lo, hi, 1.4);
 
-            if (fabs(plus.Mass + minus.Mass) > 1E-10)
+            if (fabs(plus.mass + minus.mass) > 1E-10)
             {
-                Util::Warning(INFO, "mass flux error: plus=", plus.Mass, " minus=", minus.Mass);
+                Util::Warning(INFO, "mass flux error: plus=", plus.mass, " minus=", minus.mass);
                 failed++;
             }
-            if (fabs(plus.Momentum_normal - minus.Momentum_normal) > 1E-10)
+            if (fabs(plus.momentum_normal - minus.momentum_normal) > 1E-10)
             {
-                Util::Warning(INFO, ".momentum x flux error: plus=", plus.Momentum_normal, " minus=", minus.Momentum_normal);
+                Util::Warning(INFO, ".momentum x flux error: plus=", plus.momentum_normal, " minus=", minus.momentum_normal);
                 failed++;
             }
-            if (fabs(plus.Momentum_tangent - minus.Momentum_tangent) > 1E-10)
+            if (fabs(plus.momentum_tangent - minus.momentum_tangent) > 1E-10)
             {                
-                Util::Warning(INFO, ".momentum y flux error: plus=", plus.Momentum_tangent, " minus=", minus.Momentum_tangent);
+                Util::Warning(INFO, ".momentum y flux error: plus=", plus.momentum_tangent, " minus=", minus.momentum_tangent);
                 failed++;
             }
-            if (fabs(plus.Energy + minus.Energy) > 1E-10)
+            if (fabs(plus.energy + minus.energy) > 1E-10)
             {
-                Util::Warning(INFO, ".energy flux error: plus=", plus.Energy, " minus=", minus.Energy);
+                Util::Warning(INFO, ".energy flux error: plus=", plus.energy, " minus=", minus.energy);
                 failed++;
             }
 
@@ -220,21 +220,21 @@ public:
             Flux pos = Solve(pos_vel1, pos_vel2, 1.4);
             Flux neg = Solve(neg_vel1, neg_vel2, 1.4);
 
-            if (fabs(pos.Mass + neg.Mass) > 1E-10)
+            if (fabs(pos.mass + neg.mass) > 1E-10)
             {                
-                Util::Warning(INFO, "mass flux error: positive vel=", pos.Mass, " negative vel=", neg.Mass); failed++;
+                Util::Warning(INFO, "mass flux error: positive vel=", pos.mass, " negative vel=", neg.mass); failed++;
             }
-            if (fabs(pos.Momentum_normal - neg.Momentum_normal) > 1E-10)
+            if (fabs(pos.momentum_normal - neg.momentum_normal) > 1E-10)
             {
-                Util::Warning(INFO, ".momentum x flux error: positive momentum=", pos.Momentum_normal, " negative momentum=", neg.Momentum_normal); failed++;
+                Util::Warning(INFO, ".momentum x flux error: positive momentum=", pos.momentum_normal, " negative momentum=", neg.momentum_normal); failed++;
             }
-            if (fabs(pos.Momentum_tangent - neg.Momentum_tangent) > 1E-10)
+            if (fabs(pos.momentum_tangent - neg.momentum_tangent) > 1E-10)
             {
-                Util::Warning(INFO, ".momentum y flux error: positive momentum=", pos.Momentum_tangent, " negative momentum=", neg.Momentum_tangent); failed++;
+                Util::Warning(INFO, ".momentum y flux error: positive momentum=", pos.momentum_tangent, " negative momentum=", neg.momentum_tangent); failed++;
             }
-            if (fabs(pos.Energy + neg.Energy) > 1E-10)
+            if (fabs(pos.energy + neg.energy) > 1E-10)
             {
-                Util::Warning(INFO, ".energy flux error: positive energy=", pos.Energy, " negative vel=", neg.Energy); failed++;
+                Util::Warning(INFO, ".energy flux error: positive energy=", pos.energy, " negative vel=", neg.energy); failed++;
             }
 
 

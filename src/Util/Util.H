@@ -236,7 +236,8 @@ void ParmParseException (   std::string file, std::string func, int line,
         const std::size_t nargs = sizeof...(Args);
 
         if (nargs) messagestream << "\n";
-        messagestream << "while reading " << Color::FG::Yellow << fullname << Color::Reset;
+        if (fullname != "")
+            messagestream << "while reading " << Color::FG::Yellow << fullname << Color::Reset;
         if (line2 >= 0)
         {
             messagestream << " at " << file2 << ":" << line2;

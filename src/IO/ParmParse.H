@@ -102,6 +102,7 @@
 #define pp_queryarr(...) pp.queryarr(__VA_ARGS__,INFO)
 #define pp_query(...) pp.query(__VA_ARGS__)
 #define pp_queryclass(...) pp.queryclass(__VA_ARGS__,INFO)
+#define pp_forbid(...) pp.forbid(__VA_ARGS__,INFO)
 
 
 namespace IO
@@ -131,6 +132,15 @@ public:
     void ignore(std::string name)
     {
         (void)amrex::ParmParse::contains(name.c_str());
+    }
+
+    void forbid(std::string name, std::string explanation,
+                std::string file = "", std::string func = "", int line = -1)
+    {
+        if (amrex::ParmParse::contains(name.c_str()))
+        {
+            Util::ParmParseException(INFO,file,func,line,full(name),full(name)," forbidden: ", explanation);
+        }
     }
 
     template<typename T> 
@@ -375,7 +385,7 @@ public:
     }
     template<class T>
     void queryclass(std::string name, T & value,
-                    std::string file = "", std::string func = "", int line = __LINE__)
+                    std::string file = "", std::string func = "", int line = -1)
     {
         try
         {
@@ -395,7 +405,7 @@ public:
     }
     template<class T>
     void queryclass(T * value,
-                    std::string file = "", std::string func = "", int line = __LINE__)
+                    std::string file = "", std::string func = "", int line = -1)
     {
         try
         {
@@ -412,7 +422,7 @@ public:
     }
     template<class T>
     void queryclass(T & value,
-                    std::string file = "", std::string func = "", int line = __LINE__)
+                    std::string file = "", std::string func = "", int line = -1)
     {
         try
         {

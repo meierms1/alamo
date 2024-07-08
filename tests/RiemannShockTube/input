@@ -64,30 +64,27 @@ gamma = 1.4
 cfl   = 0.4
 mu    = 0.0
 
-Density.ic.type = expression
-Density.ic.expression.constant.rho_L = 1.0
-Density.ic.expression.constant.rho_R = 0.125
-Density.ic.expression.region0 = "rho_L*(x<0) + rho_R*(x>0)" 
+density.ic.type = expression
+density.ic.expression.constant.rho_L = 1.0
+density.ic.expression.constant.rho_R = 0.125
+density.ic.expression.region0 = "rho_L*(x<0) + rho_R*(x>0)" 
 
-SolidDensity.ic.type = constant
-SolidDensity.ic.constant.value = 0.0
-SolidVelocity.ic.type = constant
-SolidVelocity.ic.constant.value = 0.0 0.0
+velocity.ic.type = expression
+velocity.ic.expression.constant.v_L = 100
+velocity.ic.expression.constant.v_R = -50
+velocity.ic.expression.region0 = "v_L*(x<0) + v_R*(x>0)"
+velocity.ic.expression.region1 = "0.0"
 
-#rho_solid = 10.0 #kg/m^3
-#rho_fluid = 10.0 #kg/m^3
-#E_solid   = 5.0
+pressure.ic.type = expression
+pressure.ic.expression.constant.p_L = 100000
+pressure.ic.expression.constant.p_R = 10000
+pressure.ic.expression.region0 = "p_L*(x<0) + p_R*(x>0)"
 
-Velocity.ic.type = expression
-Velocity.ic.expression.constant.v_L = 100
-Velocity.ic.expression.constant.v_R = -50
-Velocity.ic.expression.region0 = "v_L*(x<0) + v_R*(x>0)"
-Velocity.ic.expression.region1 = "0.0"
+solid.density.ic.type = constant
+solid.density.ic.constant.value = 0.0
+solid.velocity.ic.type = constant
+solid.velocity.ic.constant.value = 0.0 0.0
 
-Pressure.ic.type = expression
-Pressure.ic.expression.constant.p_L = 100000
-Pressure.ic.expression.constant.p_R = 10000
-Pressure.ic.expression.region0 = "p_L*(x<0) + p_R*(x>0)"
 
 ### ETA BC  ###
 
