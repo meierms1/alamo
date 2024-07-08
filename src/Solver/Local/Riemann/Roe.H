@@ -1,3 +1,10 @@
+//
+// This implements the Riemann Roe solver.
+//
+// Notation and algorithm follow the presentation in Section 5.3.3
+// of *Computational Gasdynamics* by Culbert B. Laney (page 88)
+//
+
 #include "Set/Set.H"
 
 /// A bunch of solvers
@@ -35,11 +42,11 @@ public:
     // todo: convert to static functor by replacing with static () when c++23 is released
     static Flux Solve(State lo, State hi, Set::Scalar gamma)
     {
-
         // STEP 1: Compute (or rename) primitives 
-        Set::Scalar rho_L = lo.rho,             rho_R = hi.rho;
-        Set::Scalar u_L   = lo.velocity_normal, u_R   = hi.velocity_normal;
-        Set::Scalar p_L   = lo.pressure,        p_R   = hi.pressure;
+        Set::Scalar rho_L = lo.rho,              rho_R = hi.rho;
+        Set::Scalar u_L   = lo.velocity_normal,  u_R   = hi.velocity_normal;
+        Set::Scalar v_L   = lo.velocity_tangent, v_R   = hi.velocity_tangent;
+        Set::Scalar p_L   = lo.pressure,         p_R   = hi.pressure;
 
         Set::Scalar ke_L = 0.5 * rho_L * u_L * u_L;
         Set::Scalar ue_L = p_L / (gamma - 1);
@@ -48,7 +55,6 @@ public:
         Set::Scalar ke_R = 0.5 * rho_R * u_R * u_R;
         Set::Scalar ue_R = p_R / (gamma - 1);
         Set::Scalar h_TR = (ke_R + ue_R + p_R) / rho_R;
-
         
         //
         // STEP 2: Compute Roe-averaged quantities
@@ -82,7 +88,7 @@ public:
         Set::Scalar deltav3 = deltau   - deltap / (rho_RL * a_RL); // 5.54c
 
         //
-        // STEP 7:
+        // STEP 7: Compute fluxes
         //
         Flux fl;
         
@@ -103,6 +109,12 @@ public:
             + 0.5*u_RL*u_RL*std::min(0.0,lambda1)*deltav1
             + (0.5*rho_RL/a_RL)*(   (h_RL + a_RL*u_RL)*std::min(0.0,lambda2)*deltav2 -
                                     (h_RL - a_RL*u_RL)*std::min(0.0,lambda3)*deltav3);
+
+        //
+        // (Update the tangential momentum flux)
+        //
+        fl.Momentum_tangent = 0.5 * (rho_L*u_L*v_L + rho_R*u_R*v_R);
+
 
         return fl;
     }

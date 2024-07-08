@@ -84,5 +84,18 @@ h7 {font-size:xx-small!important;text-decoration: underline;}
 
 
 .wy-nav-content {
-   //max-width: none; // uncomment to make full-width (but this doesn't look as good)
+   //max-width: none; // uncomment to make full-width (but this does not look as good)
+}
+
+
+/* Custom Admonitions */
+
+.reference p.admonition-title:before{
+    content: "\f02d";
+}
+.reference .admonition-title{
+    background: #333333;
+}
+div.reference.admonition{
+    background: #EEEEEE;
 }

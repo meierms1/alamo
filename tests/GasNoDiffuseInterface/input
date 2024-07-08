@@ -73,6 +73,9 @@ Pressure.ic.type = expression
 Pressure.ic.expression.constant.gamma = 1.4
 Pressure.ic.expression.region0 = "(0.5*tanh((x-4.0)/0.5)+0.5)*0.1 + 1.0"
 
+SolidVelocity.ic.type=constant
+SolidVelocity.constant.value=0.0
+
 ### ETA BC  ###
 
 pf.eta.bc.type.xlo = neumann
