@@ -158,7 +158,7 @@ obj/obj-$(POSTFIX)/%.cc.d: src/%.cc ${AMREX_TARGET}
 	@printf "$(RESET)$<\n"
 	@$(CC) -I./src/ $< ${ALAMO_INCLUDE} ${CXX_COMPILE_FLAGS} -MM -MT $(@:.cc.d=.cc.o) -MF $@
 
-obj/obj-$(POSTFIX)/IO/WriteMetaData.cpp.o: .FORCE ${AMREX_TARGET}
+obj/obj-$(POSTFIX)/IO/WriteMetaData.cpp.o: .FORCE ${AMREX_TARGET} ${DEP_EXTRA}
 	$(eval CTR=$(shell echo $$(($(CTR)+1))))
 	@printf "$(B_ON)$(FG_LIGHTYELLOW)COMPILING$(RESET)$(FG_LIGHTYELLOW)   "
 	@printf '%9s' "($(CTR)/$(NUM)) " 
