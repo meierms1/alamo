@@ -84,7 +84,7 @@ plot_file = ./tests/ViscousHydro2D/output
 ### MESHING ###
 
 #amr.plot_dt = 0.1
-amr.plot_int = 100
+amr.plot_int = 1
 amr.max_level = 0
 amr.max_grid_size = 500000
 amr.blocking_factor = 2
@@ -127,6 +127,7 @@ eta.ic.expression.constant.eps   = 0.1
 eta.ic.expression.constant.vel_x = 0.0 
 eta.ic.expression.constant.vel_y = 0.0 
 eta.ic.expression.region0        = "0.5 + 0.5*tanh((y - vel_y*t)/eps)"
+#eta.ic.expression.region0        = "1.0"
 
 ### HYDRO PARAM ###
 
@@ -138,8 +139,15 @@ rho_solid = 1000.0 #kg/m^3
 rho_fluid = 100.0 #kg/m^3
 E_solid   = 5.0
 
+solid.density.ic.type = constant
+solid.density.ic.constant.value = 1.0
 solid.velocity.ic.type = constant
 solid.velocity.ic.constant.value = 0.0
+solid.momentum.ic.type = constant
+solid.momentum.ic.constant.value = 0.0
+solid.energy.ic.type = constant
+solid.energy.ic.constant.value = 0.0
+
 
 velocity.ic.type = expression
 velocity.ic.expression.region0 = "0.0" #"0.01 * (0.5 + 0.5*tanh(y/0.1))"

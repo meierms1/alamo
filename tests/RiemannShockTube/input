@@ -84,6 +84,10 @@ solid.density.ic.type = constant
 solid.density.ic.constant.value = 0.0
 solid.velocity.ic.type = constant
 solid.velocity.ic.constant.value = 0.0 0.0
+solid.momentum.ic.type = constant
+solid.momentum.ic.constant.value = 0.0
+solid.energy.ic.type = constant
+solid.energy.ic.constant.value = 0.0
 
 ### ETA BC  ###
 
