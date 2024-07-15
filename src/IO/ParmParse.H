@@ -148,6 +148,25 @@ public:
         }
     }
 
+    bool contains(std::string name)
+    {
+        if (amrex::ParmParse::contains(name.c_str()))
+            return true;
+        if (amrex::ParmParse::contains(full(name).c_str()))
+            return true;
+        {
+            std::set<std::string> subs = amrex::ParmParse::getEntries(name.c_str());
+            if (subs.size())
+                return true;
+        }
+        {
+            std::set<std::string> subs = amrex::ParmParse::getEntries(full(name).c_str());
+            if (subs.size())
+                return true;
+        }
+        return false;
+    }
+
     template<typename T> 
     int query_required( std::string name, T & value,
                         std::string file = "", std::string func = "", int line = -1)
@@ -235,6 +254,8 @@ public:
     int query_file( std::string name, std::string & value, bool copyfile, bool checkfile,
                     std::string file = "", std::string func = "query_file", int line = -1)
     {
+        try
+    {
         if (!contains(name.c_str()))
         {
             Util::ParmParseException(INFO,file,func,line,full(name),full(name)," must be specified");
@@ -242,22 +263,28 @@ public:
 
         int retval = query(name.c_str(),value);
 
+            if (amrex::ParallelDescriptor::IOProcessor())
+            {
         if ( checkfile && ! std::filesystem::exists(value))
         {
             Util::ParmParseException(INFO,file,func,line,full(name),full(name)," does not exist");
         }
-
         if ( checkfile && !std::filesystem::is_regular_file(value))
         {
             Util::ParmParseException(INFO,file,func,line,full(name),full(name)," is not a regular file");
         }
-
         if ( copyfile )
         {
-            Util::CopyFileToOutputDir(value, true);
+                    Util::CopyFileToOutputDir(value, true, full(name));
         }
-
+            }
         return retval;
+        }
+        catch (...)
+        {
+            Util::ParmParseException(INFO,file,func,line,full(name));
+        }
+        return -1;
     }
     int query_file( std::string name, std::string & value, bool copyfile, 
                     std::string file = "", std::string func = "query_file", int line = -1)
@@ -395,7 +422,7 @@ public:
                 std::stringstream ss;
                 for (unsigned int i=0; i < unused_inputs.size(); i++)
                     ss << "\n\t" << unused_inputs[i];
-                Util::ParmParseException(INFO,file,func,line,full(name),"The following inputs were specified but not used",ss.str());
+                Util::ParmParseException(INFO,file,func,line,name,"The following inputs were specified but not used",ss.str());
             }
         }
         catch (...)
@@ -407,7 +434,7 @@ public:
     }
     template<class T>
     void queryclass(std::string name, T & value,
-                    std::string file = "", std::string func = "", int line = -1)
+                    std::string file = "", std::string func = "", int line = __LINE__)
     {
         try
         {
@@ -419,7 +446,7 @@ public:
                 std::stringstream ss;
                 for (unsigned int i=0; i < unused_inputs.size(); i++)
                     ss << "\n\t" << unused_inputs[i];
-                Util::ParmParseException(INFO,file,func,line,full(name),"The following inputs were specified but not used",ss.str());
+                Util::ParmParseException(INFO,file,func,line,name,"The following inputs were specified but not used",ss.str());
             }
         }
         catch (...)
@@ -431,7 +458,7 @@ public:
     }
     template<class T>
     void queryclass(T * value,
-                    std::string file = "", std::string func = "", int line = -1)
+                    std::string file = "", std::string func = "", int line = __LINE__)
     {
         try
         {
@@ -442,17 +469,17 @@ public:
                 std::stringstream ss;
                 for (unsigned int i=0; i < unused_inputs.size(); i++)
                     ss << "\n\t" << unused_inputs[i];
-                Util::ParmParseException(INFO,file,func,line,"The following inputs were specified but not used",ss.str());
+                Util::ParmParseException(INFO,file,func,line,getPrefix(),"The following inputs were specified but not used",ss.str());
             }
         }
         catch (...)
         {
-            Util::ParmParseException(INFO,file,func,line);
+            Util::ParmParseException(INFO,file,func,line,getPrefix());
         }
     }
     template<class T>
     void queryclass(T & value,
-                    std::string file = "", std::string func = "", int line = -1)
+                    std::string file = "", std::string func = "", int line = __LINE__)
     {
         try
         {
@@ -463,12 +490,12 @@ public:
                 std::stringstream ss;
                 for (unsigned int i=0; i < unused_inputs.size(); i++)
                     ss << "\n\t" << unused_inputs[i];
-                Util::ParmParseException(INFO,file,func,line,"The following inputs were specified but not used",ss.str());
+                Util::ParmParseException(INFO,file,func,line,getPrefix(),"The following inputs were specified but not used",ss.str());
             }
         }
         catch (...)
         {
-            Util::ParmParseException(INFO,file,func,line);
+            Util::ParmParseException(INFO,file,func,line,getPrefix());
         }
     }
 };
