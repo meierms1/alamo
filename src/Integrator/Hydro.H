@@ -100,7 +100,7 @@ private:
     Set::Field<Set::Scalar> rhoInterface_mf;
     Set::Field<Set::Scalar> vInjected_mf;
     Set::Field<Set::Scalar> q_mf;
-    Set::Field<Set::Scalar> Source_mf;
+    Set::Field<Set::Scalar> source_mf;
 
     BC::BC<Set::Scalar>* density_bc = nullptr;
     BC::BC<Set::Scalar>* velocity_bc = nullptr;
