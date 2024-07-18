@@ -146,7 +146,7 @@ private:
     } thermal;
 
     struct {
-        int on = 0;
+        int on = 1;
         Set::Scalar Tref = 300.0;
         model_type model_ap, model_htpb;
         Set::Scalar traction = 0.0;
