@@ -119,3 +119,14 @@ m_refinement_criterion   = 100000.1
 eta_refinement_criterion = 100000.1
 
 #TODO
+
+momentum.bc.type.xlo = neumann
+momentum.bc.type.xhi = neumann
+momentum.bc.type.ylo = neumann
+momentum.bc.type.yhi = neumann
+energy.bc.type.xlo = neumann
+energy.bc.type.xhi = neumann
+energy.bc.type.ylo = neumann
+energy.bc.type.yhi = neumann
+
+

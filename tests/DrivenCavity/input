@@ -109,3 +109,13 @@ eta_refinement_criterion = 1.1
 omega_refinement_criterion = 10.55
 
 #TODO
+
+
+momentum.bc.type.xlo = neumann
+momentum.bc.type.xhi = neumann
+momentum.bc.type.ylo = neumann
+momentum.bc.type.yhi = neumann
+energy.bc.type.xlo = neumann
+energy.bc.type.xhi = neumann
+energy.bc.type.ylo = neumann
+energy.bc.type.yhi = neumann

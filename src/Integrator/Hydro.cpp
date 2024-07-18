@@ -49,30 +49,37 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
         pp_forbid("v.bc","replaced with velocity.bc");
         value.velocity_bc = new BC::Constant(2, pp, "velocity.bc");
         value.eta_bc = new BC::Constant(1, pp, "pf.eta.bc");
+
+        value.momentum_bc = new BC::Constant(2, pp, "momentum.bc");
+        value.energy_bc = new BC::Constant(1, pp, "energy.bc");
+
+
     }
     // Register FabFields:
     {
         int nghost = 2;
 
-        value.RegisterNewFab(value.eta_mf,           value.eta_bc,     1, nghost, "eta",          true );
-        value.RegisterNewFab(value.eta_old_mf,       value.eta_bc,     1, nghost, "eta_old",      false);
-        value.RegisterNewFab(value.etadot_mf,        value.eta_bc,     1, nghost, "etadot",       true );
-        value.RegisterNewFab(value.density_mf,       value.density_bc, 1, nghost, "density",      true );
-        value.RegisterNewFab(value.density_old_mf,   value.density_bc, 1, nghost, "rho_old",      false);
-        value.RegisterNewFab(value.energy_mf,       &value.bc_nothing, 1, nghost, "energy",       true );
-        value.RegisterNewFab(value.energy_old_mf,   &value.bc_nothing, 1, nghost, "energy_old" ,  false);
-        value.RegisterNewFab(value.momentum_mf,     value.velocity_bc, 2, nghost, "momentum",     true );
-        value.RegisterNewFab(value.momentum_old_mf, value.velocity_bc, 2, nghost, "momentum_old", false);
-        value.RegisterNewFab(value.velocity_mf,     &value.bc_nothing, 2, nghost, "velocity",     true );
-        value.RegisterNewFab(value.vorticity_mf,    &value.bc_nothing, 1, nghost, "vorticity",    true );
-        value.RegisterNewFab(value.pressure_mf,      value.pressure_bc,1, nghost, "pressure",     true );
-        value.RegisterNewFab(value.vInjected_mf,    &value.bc_nothing, 2, nghost, "vInjected",    true );
-        value.RegisterNewFab(value.rhoInterface_mf, &value.bc_nothing, 1, nghost, "rhoInterface", true );
-        value.RegisterNewFab(value.q_mf,            &value.bc_nothing, 2, nghost, "q",            true );
+        value.RegisterNewFab(value.eta_mf,           value.eta_bc,      1, nghost, "eta",          true );
+        value.RegisterNewFab(value.eta_old_mf,       value.eta_bc,      1, nghost, "eta_old",      false);
+        value.RegisterNewFab(value.etadot_mf,        value.eta_bc,      1, nghost, "etadot",       true );
+        value.RegisterNewFab(value.density_mf,       value.density_bc,  1, nghost, "density",      true );
+        value.RegisterNewFab(value.density_old_mf,   value.density_bc,  1, nghost, "rho_old",      false);
+        value.RegisterNewFab(value.energy_mf,        value.energy_bc,   1, nghost, "energy",       true );
+        value.RegisterNewFab(value.energy_old_mf,    value.energy_bc,   1, nghost, "energy_old" ,  false);
+        value.RegisterNewFab(value.momentum_mf,      value.momentum_bc, 2, nghost, "momentum",     true );
+        value.RegisterNewFab(value.momentum_old_mf,  value.momentum_bc, 2, nghost, "momentum_old", false);
+        value.RegisterNewFab(value.velocity_mf,      value.velocity_bc, 2, nghost, "velocity",     true );
+        value.RegisterNewFab(value.velocity_old_mf,  value.velocity_bc, 2, nghost, "velocity_old", false);
+        value.RegisterNewFab(value.vorticity_mf,    &value.bc_nothing,  1, nghost, "vorticity",    true );
+        value.RegisterNewFab(value.pressure_mf,      value.pressure_bc, 1, nghost, "pressure",     true );
+        value.RegisterNewFab(value.pressure_old_mf,  value.pressure_bc, 1, nghost, "pressure_old",     false);
+        value.RegisterNewFab(value.vInjected_mf,    &value.bc_nothing,  2, nghost, "vInjected",    true );
+        value.RegisterNewFab(value.rhoInterface_mf, &value.bc_nothing,  1, nghost, "rhoInterface", true );
+        value.RegisterNewFab(value.q_mf,            &value.bc_nothing,  2, nghost, "q",            true );
 
         value.RegisterNewFab(value.solid.velocity_mf, &value.bc_nothing, 2, nghost, "solid.velocity",  true);
-
         value.RegisterNewFab(value.solid.density_mf,  &value.bc_nothing, 1, nghost, "solid.density",  true);
+        value.RegisterNewFab(value.solid.pressure_mf,  &value.bc_nothing, 1, nghost, "solid.pressure",  true);
         value.RegisterNewFab(value.solid.momentum_mf, &value.bc_nothing, 2, nghost, "solid.momentum", true);
         value.RegisterNewFab(value.solid.energy_mf,   &value.bc_nothing, 1, nghost, "solid.energy",   true);
 
@@ -140,6 +147,13 @@ Hydro::Parse(Hydro& value, IO::ParmParse& pp)
     }
     {
         std::string type;
+        // initial condition for pressure in the solid phase
+        pp_query_validate("solid.pressure.ic.type", type,{"constant","expression"});
+        if (type == "constant") value.solid.pressure_ic = new IC::Constant(value.geom, pp, "solid.pressure.ic.constant");
+        else if (type == "expression") value.solid.pressure_ic = new IC::Expression(value.geom, pp, "solid.pressure.ic.expression");
+    }
+    {
+        std::string type;
         pp_forbid("Density.ic.type","replaced with density.ic.type");
         pp_forbid("Density.ic.constant","replaced with density.ic.constant");
         pp_forbid("Density.ic.expression","replaced with density.ic.expression");
@@ -192,6 +206,7 @@ void Hydro::Initialize(int lev)
 
     solid.velocity_ic ->Initialize(lev, solid.velocity_mf, 0.0);
     solid.density_ic  ->Initialize(lev, solid.density_mf, 0.0);
+    solid.pressure_ic ->Initialize(lev, solid.pressure_mf, 0.0);
     solid.momentum_ic ->Initialize(lev, solid.momentum_mf, 0.0);
     solid.energy_ic   ->Initialize(lev, solid.energy_mf, 0.0);
 
@@ -289,6 +304,12 @@ void Hydro::TimeStepComplete(Set::Scalar, int lev)
 void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
 {
     std::swap(eta_old_mf, eta_mf);
+    std::swap(momentum_old_mf[lev], momentum_mf[lev]);
+    std::swap(velocity_old_mf[lev], velocity_mf[lev]);
+    std::swap(energy_old_mf[lev],   energy_mf[lev]);
+    std::swap(density_old_mf[lev],  density_mf[lev]);
+    std::swap(pressure_old_mf[lev], pressure_mf[lev]);
+
     UpdateEta(lev, time);
     const Set::Scalar* DX = geom[lev].CellSize();
 
@@ -311,37 +332,7 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
             Set::Vector grad_uy = Numeric::Gradient(v, i, j, k, 1, DX, sten);
             omega(i, j, k) = eta(i, j, k) * (grad_uy(0) - grad_ux(1));
         });
-
-        
     }
-
-    std::swap(momentum_old_mf[lev], momentum_mf[lev]);
-    std::swap(energy_old_mf[lev],   energy_mf[lev]);
-    std::swap(density_old_mf[lev],  density_mf[lev]);
-
-
-    //
-    // calculate primitive variables from conserved (mixed) variables
-    //
-    for (amrex::MFIter mfi(*eta_mf[lev], false); mfi.isValid(); ++mfi)
-    {
-        const amrex::Box& bx = mfi.validbox();
-        Set::Patch<const Set::Scalar> rho = density_old_mf.Patch(lev,mfi);
-        Set::Patch<const Set::Scalar> E   = energy_old_mf.Patch(lev,mfi);
-        Set::Patch<const Set::Scalar> M   = momentum_old_mf.Patch(lev,mfi);
-
-        Set::Patch<Set::Scalar>       v = velocity_mf.Patch(lev,mfi);
-        Set::Patch<Set::Scalar>       p = pressure_mf.Patch(lev,mfi);
-
-        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-        {
-            v(i, j, k, 0) = M(i, j, k, 0) / rho(i, j, k);
-            v(i, j, k, 1) = M(i, j, k, 1) / rho(i, j, k);
-            p(i, j, k) = (E(i, j, k) - 0.5 * (M(i, j, k, 0) * M(i, j, k, 0) + M(i, j, k, 1) * M(i, j, k, 1))/rho(i, j, k)) * (gamma - 1.0);
-        });
-    }
-    velocity_mf[lev] -> FillBoundary();
-    pressure_mf[lev] -> FillBoundary();
     
     //
     // calculate source terms
@@ -351,20 +342,17 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
         const amrex::Box& bx = mfi.validbox();
 
         Set::Patch<const Set::Scalar>  rho = density_old_mf.Patch(lev,mfi);
+        Set::Patch<const Set::Scalar>  rho_solid = solid.density_mf.Patch(lev,mfi);
+        Set::Patch<const Set::Scalar>  p_solid = solid.pressure_mf.Patch(lev,mfi);
         Set::Patch<const Set::Scalar>  E   = energy_old_mf.Patch(lev,mfi);
         Set::Patch<const Set::Scalar> _M   = momentum_old_mf.Patch(lev,mfi);
-        Set::Patch<const Set::Scalar> _u   = velocity_mf.Patch(lev,mfi);
-        Set::Patch<const Set::Scalar>  p   = pressure_mf.Patch(lev,mfi);
-
-        //amrex::Array4<const Set::Scalar> const& rhoInterface = (*rhoInterface_mf[lev]).array(mfi);
-        //Set::Patch<const Set::Scalar> q   = q_mf.Patch(lev,mfi);
-        //amrex::Array4<const Set::Scalar> const& vInjected    = (*vInjected_mf[lev]).array(mfi);
+        Set::Patch<const Set::Scalar> _u   = velocity_old_mf.Patch(lev,mfi);
+        Set::Patch<const Set::Scalar>  p   = pressure_old_mf.Patch(lev,mfi);
 
         Set::Patch<const Set::Scalar> eta    = eta_old_mf.Patch(lev,mfi);
         Set::Patch<const Set::Scalar> etadot = etadot_mf.Patch(lev,mfi);
 
         Set::Patch<const Set::Scalar> _M_solid = solid.momentum_mf.Patch(lev,mfi);
-
 
         Set::Patch<Set::Scalar>       source = source_mf.Patch(lev,mfi);
 
@@ -389,8 +377,9 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
             //
             Set::Scalar mdot0 = 0.0; 
             // mixture terms
-            mdot0 += M_solid.dot(grad_eta);
-
+            mdot0 += -rho_solid(i,j,k) * grad_eta.dot(u);
+            mdot0 += (1.0 - eta(i,j,k)) * rho_solid(i,j,k) * div_u;
+            
 
             //
             // Momentum conservation source term
@@ -399,9 +388,12 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
             // passive terms
             Pdot0 += ( rho(i,j,k)*(u*u.transpose()) + mu*grad_u + 0.5*mu*grad_u.transpose() + 0.5*mu*div_u*Set::Matrix::Identity()) * grad_eta;
             // active terms [ none ftm ]
-            // mixture terms
-            Pdot0 += -(M_solid * u.transpose()) * grad_eta;
-            Pdot0 += (1.0-eta(i,j,k)) * M_solid * div_u;
+            // mixture terms - rho
+            Pdot0 += - rho_solid(i,j,k) * (u * u.transpose()) * grad_eta; 
+            Pdot0 += (1.0-eta(i,j,k)) * rho_solid(i,j,k) * grad_u * u;
+            Pdot0 += (1.0-eta(i,j,k)) * rho_solid(i,j,k) * u * div_u;
+            // mixture terms - pressure
+            Pdot0 += - grad_eta * p_solid(i,j,k);
 
             //Set::Scalar etadot_cell  = etadot(i, j, k);
             //Set::Matrix gradu        = Numeric::Gradient(v, i, j, k, DX);
@@ -445,9 +437,11 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
             // rho(i, j, k)  += source(i, j, k, 0) * dt;
             // M(i, j, k, 0) += source(i, j, k, 1) * dt;
             // M(i, j, k, 1) += source(i, j, k, 2) * dt;
+
+            
         });
     }
-    source_mf[lev] -> FillBoundary();
+    //source_mf[lev] -> FillBoundary();
     //return;
     
 
@@ -460,18 +454,19 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
         Set::Patch<const Set::Scalar> M   = momentum_old_mf.Patch(lev,mfi);
 
         Set::Patch<const Set::Scalar> eta    = eta_old_mf.Patch(lev,mfi);
+        Set::Patch<const Set::Scalar> eta_new= eta_mf.Patch(lev,mfi);
         Set::Patch<const Set::Scalar> etadot = etadot_mf.Patch(lev,mfi);
+
+        Set::Patch<const Set::Scalar> v = velocity_old_mf.Patch(lev,mfi);
+        Set::Patch<const Set::Scalar> p = pressure_old_mf.Patch(lev,mfi);
+        Set::Patch<const Set::Scalar> p_solid = solid.pressure_mf.Patch(lev,mfi);
 
         Set::Patch<Set::Scalar> E_new   = energy_mf.Patch(lev,mfi);
         Set::Patch<Set::Scalar> rho_new = density_mf.Patch(lev,mfi);
         Set::Patch<Set::Scalar> M_new   = momentum_mf.Patch(lev,mfi);
+        Set::Patch<Set::Scalar> v_new   = velocity_mf.Patch(lev,mfi);
+        Set::Patch<Set::Scalar> p_new   = pressure_mf.Patch(lev,mfi);
 
-        Set::Patch<const Set::Scalar> v = velocity_mf.Patch(lev,mfi);
-        Set::Patch<const Set::Scalar> p = pressure_mf.Patch(lev,mfi);
-
-        Set::Patch<const Set::Scalar> rho_solid = solid.density_mf.Patch(lev,mfi);
-        Set::Patch<const Set::Scalar> v_solid   = solid.velocity_mf.Patch(lev,mfi);
-        Set::Patch<const Set::Scalar> M_solid   = solid.momentum_mf.Patch(lev,mfi);
 
         Set::Patch<const Set::Scalar> source   = source_mf.Patch(lev,mfi);
 
@@ -497,13 +492,21 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
 
             Solver::Local::Riemann::Roe::Flux flux_xlo, flux_ylo, flux_xhi, flux_yhi;
 
-            //lo interface fluxes
-            flux_xlo = Solver::Local::Riemann::Roe::Solve(lo_statex, state_x, gamma);
-            flux_ylo = Solver::Local::Riemann::Roe::Solve(lo_statey, state_y, gamma);
+            try
+            {
+                //lo interface fluxes
+                flux_xlo = Solver::Local::Riemann::Roe::Solve(lo_statex, state_x, gamma);
+                flux_ylo = Solver::Local::Riemann::Roe::Solve(lo_statey, state_y, gamma);
 
-            //hi interface fluxes
-            flux_xhi = Solver::Local::Riemann::Roe::Solve(state_x, hi_statex, gamma);
-            flux_yhi = Solver::Local::Riemann::Roe::Solve(state_y, hi_statey, gamma);
+                //hi interface fluxes
+                flux_xhi = Solver::Local::Riemann::Roe::Solve(state_x, hi_statex, gamma);
+                flux_yhi = Solver::Local::Riemann::Roe::Solve(state_y, hi_statey, gamma);
+            }
+            catch (...)
+            {
+                Util::Message(INFO,"i=",i," j=",j);
+                Util::Exception(INFO,"riemann solver failed");
+            }
 
             // Set::Scalar E_solid = (0.5 * (v_solid(i, j, k, 0) * v_solid(i, j, k, 0) + v_solid(i, j, k, 1) * v_solid(i, j, k, 1)) * rho_solid(i, j, k) + p(i, j, k) / (gamma - 1.0));
 
@@ -586,8 +589,17 @@ void Hydro::Advance(int lev, Set::Scalar time, Set::Scalar dt)
                 /*Update solid energnsy*/
                 //+ (1.0 - eta(i, j, k)) * (E_solid - E(i,j,k))
                 ;
-                
 
+
+            v_new(i, j, k, 0) = eta_new(i,j,k) * M_new(i, j, k, 0) / rho_new(i, j, k);
+            v_new(i, j, k, 1) = eta_new(i,j,k) * M_new(i, j, k, 1) / rho_new(i, j, k);
+            p_new(i, j, k) =
+                eta_new(i,j,k) * (
+                    (E_new(i, j, k) - 0.5 * (M_new(i, j, k, 0) * M_new(i, j, k, 0) + M_new(i, j, k, 1) * M_new(i, j, k, 1))
+                     / rho_new(i, j, k)) * (gamma - 1.0)
+                    )
+                +
+                (1.0 - eta_new(i,j,k)) * p_solid(i,j,k);
 
         });
     }

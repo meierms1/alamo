@@ -9,8 +9,8 @@ plot_file = ./output.ReflectedWave
 ### MESHING ###
 
 #amr.plot_dt = 0.1
-amr.plot_int = 1
-amr.max_level = 0
+amr.plot_int = 100
+amr.max_level = 2
 amr.max_grid_size = 500000
 amr.blocking_factor = 2
 #amr.regrid_int = 100
@@ -33,8 +33,8 @@ geometry.is_periodic = 0 0 0
 
 ### TIME STEP ###
 
-timestep  = 1.0e-4
-stop_time = 5.0
+timestep  = 1.0e-5
+stop_time = 1.0
 #small    = 1.0e-5
 
 
@@ -50,7 +50,7 @@ InterfaceVel_x = 0.0
 InterfaceVel_y = 0.0
 
 eta.ic.type = expression
-eta.ic.expression.constant.eps = 0.001
+eta.ic.expression.constant.eps = 0.05
 eta.ic.expression.constant.vel_x = 0.0 # must be consistent with InterfaceVel_x
 eta.ic.expression.constant.vel_y = 0.0 # must be consistent with InterfaceVel_y
 eta.ic.expression.region0 = "1.0 - (0.5 + 0.5*tanh((x - vel_x*t - 1.0)/eps))"
@@ -66,14 +66,20 @@ rho_fluid = 1.0 #kg/m^3
 
 E_solid = 5.0
 
-Velocity.ic.type = expression
-Velocity.ic.expression.region0 = "(0.001 - 0.001*tanh((x + 1.0)/0.01))" #* (1.0 - (0.5 + 0.5*tanh((x - 1.0)/0.01)))"
-Velocity.ic.expression.region1 = "0.0"
+velocity.ic.type = expression
+velocity.ic.expression.region0 = "(0.001 - 0.001*tanh((x + 1.0)/0.01))" #* (1.0 - (0.5 + 0.5*tanh((x - 1.0)/0.01)))"
+velocity.ic.expression.region1 = "0.0"
+solid.velocity.ic.type=constant
+solid.velocity.ic.constant.value=0.0
+solid.pressure.ic.type=constant
+solid.pressure.ic.constant.value=2.0
 
-Pressure.ic.type = expression
-Pressure.ic.expression.constant.gamma = 1.4
-Pressure.ic.expression.constant.E_solid = 5.0
-Pressure.ic.expression.region0 = "(gamma - 1.0) * E_solid"
+
+pressure.ic.type = expression
+pressure.ic.expression.constant.gamma = 1.4
+pressure.ic.expression.constant.E_solid = 5.0
+pressure.ic.expression.region0 = "(gamma - 1.0) * E_solid"
+
 
 ### ETA BC  ###
 
@@ -93,41 +99,48 @@ pf.eta.bc.val.zhi = 0.0
 
 ### HYDRO BC ###
 
-rho.bc.type.xhi = neumann
-rho.bc.type.xlo = neumann
-rho.bc.type.ylo = neumann
-rho.bc.type.yhi = neumann
+density.bc.type.xhi = neumann
+density.bc.type.xlo = neumann
+density.bc.type.ylo = neumann
+density.bc.type.yhi = neumann
+density.bc.val.xhi = 0.0
+density.bc.val.xlo = 0.0
+density.bc.val.ylo = 0.0 
+density.bc.val.yhi = 0.0
 
-rho.bc.val.xhi = 0.0
-rho.bc.val.xlo = 0.0
-rho.bc.val.ylo = 0.0 
-rho.bc.val.yhi = 0.0
+pressure.bc.type.xhi = neumann
+pressure.bc.type.xlo = neumann
+pressure.bc.type.ylo = neumann
+pressure.bc.type.yhi = neumann
+pressure.bc.val.xhi = 0.0
+pressure.bc.val.xlo = 0.0
+pressure.bc.val.ylo = 0.0 
+pressure.bc.val.yhi = 0.0
 
-p.bc.type.xhi = neumann
-p.bc.type.xlo = neumann
-p.bc.type.ylo = neumann
-p.bc.type.yhi = neumann
+velocity.bc.type.xhi = neumann neumann
+velocity.bc.type.xlo = neumann neumann
+velocity.bc.type.ylo = neumann neumann
+velocity.bc.type.yhi = neumann neumann
+velocity.bc.val.xhi = 0.0 0.0
+velocity.bc.val.xlo = 0.0 0.0
+velocity.bc.val.ylo = 0.0 0.0
+velocity.bc.val.yhi = 0.0 0.0
 
-p.bc.val.xhi = 0.0
-p.bc.val.xlo = 0.0
-p.bc.val.ylo = 0.0 
-p.bc.val.yhi = 0.0
+momentum.bc.type.xhi = neumann neumann
+momentum.bc.type.xlo = neumann neumann
+momentum.bc.type.ylo = neumann neumann
+momentum.bc.type.yhi = neumann neumann
 
-v.bc.type.xhi = neumann neumann
-v.bc.type.xlo = neumann neumann
-v.bc.type.ylo = neumann neumann
-v.bc.type.yhi = neumann neumann
-
-v.bc.val.xhi = 0.0 0.0
-v.bc.val.xlo = 0.0 0.0
-v.bc.val.ylo = 0.0 0.0
-v.bc.val.yhi = 0.0 0.0
+energy.bc.type.xhi = neumann 
+energy.bc.type.xlo = neumann 
+energy.bc.type.ylo = neumann 
+energy.bc.type.yhi = neumann 
 
 ### HYDRO REFINEMENT CRITERIA ###
 
 r_refinement_criterion = 0.1
 e_refinement_criterion = 0.1
-m_refinement_criterion = 0.1
-eta_refinement_criterion = 0.1
+m_refinement_criterion = 0.01
+eta_refinement_criterion = .1
 
 #TODO

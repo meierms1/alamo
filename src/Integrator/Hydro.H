@@ -79,17 +79,22 @@ private:
     Set::Field<Set::Scalar> momentum_old_mf;
 
     Set::Field<Set::Scalar> velocity_mf;
+    Set::Field<Set::Scalar> velocity_old_mf;
+
     Set::Field<Set::Scalar> pressure_mf;
+    Set::Field<Set::Scalar> pressure_old_mf;
 
     Set::Field<Set::Scalar> vorticity_mf;
 
 
     struct {
         Set::Field<Set::Scalar> density_mf;
+        Set::Field<Set::Scalar> pressure_mf;
         Set::Field<Set::Scalar> velocity_mf;
         Set::Field<Set::Scalar> momentum_mf;
         Set::Field<Set::Scalar> energy_mf;
         IC::IC* density_ic  = nullptr;
+        IC::IC* pressure_ic  = nullptr;
         IC::IC* velocity_ic = nullptr;
         IC::IC* momentum_ic = nullptr;
         IC::IC* energy_ic = nullptr;
@@ -104,7 +109,9 @@ private:
 
     BC::BC<Set::Scalar>* density_bc = nullptr;
     BC::BC<Set::Scalar>* velocity_bc = nullptr;
+    BC::BC<Set::Scalar>* momentum_bc = nullptr;
     BC::BC<Set::Scalar>* pressure_bc = nullptr;
+    BC::BC<Set::Scalar>* energy_bc = nullptr;
     BC::BC<Set::Scalar>* eta_bc = nullptr;
 
     IC::IC* velocity_ic = nullptr;

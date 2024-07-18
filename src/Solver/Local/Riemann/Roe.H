@@ -71,8 +71,8 @@ public:
             Util::Message(INFO,v_L, " ", v_R);
             Util::Message(INFO,p_L, " ", p_R);
         }
-        Util::Assert(INFO,TEST(a_RL_sq==a_RL_sq)," a_RL_sq is nan/inf; (a_RL_sq=", a_RL_sq,")");
-        Util::Assert(INFO,TEST(a_RL_sq>=0),      " a_RL_sq is negative; (a_RL_sq=(",a_RL_sq,")");
+        Util::AssertException(INFO,TEST(a_RL_sq==a_RL_sq)," a_RL_sq is nan/inf; (a_RL_sq=", a_RL_sq,")");
+        Util::AssertException(INFO,TEST(a_RL_sq>=0),      " a_RL_sq is negative; (a_RL_sq=(",a_RL_sq,")");
 
         Set::Scalar a_RL = std::sqrt(a_RL_sq);
 

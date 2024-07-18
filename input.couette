@@ -11,13 +11,13 @@ plot_file = output
 
 ### MESHING ###
 
-#amr.plot_dt = 0.1
-amr.plot_int = 1
+amr.plot_dt = 0.1
+amr.plot_int = 1000
 amr.max_level = 0
 amr.max_grid_size = 500000
 amr.blocking_factor = 2
 amr.grid_eff = 0.8
-amr.n_cell = 64 64 #160 20 0
+amr.n_cell = 16 64 #160 20 0
 
 # Uncomment to test AMR
 #amr.max_level = 2
@@ -26,7 +26,7 @@ amr.n_cell = 64 64 #160 20 0
 ### DIMENSIONS ###
 
 geometry.prob_lo =  0.0    0.0    0.0 # [ m ] 
-geometry.prob_hi =  1.0   1.0   0.0 # [ m ]
+geometry.prob_hi =  0.25   1.0   0.0 # [ m ]
 
 
 
@@ -35,8 +35,8 @@ geometry.is_periodic = 0 0 0
 
 ### TIME STEP ###
 
-timestep  = 1.0e-6
-stop_time = 0.01
+timestep  = 1.0e-5
+stop_time = 1.0
 
 ### ETA IC ###
 
@@ -58,7 +58,7 @@ q.ic.constant.value = 0.0
 #eta.ic.type = constant
 #eta.ic.constant.value  = 1.0
 eta.ic.type = expression
-eta.ic.expression.constant.eps   = 0.1
+eta.ic.expression.constant.eps   = 0.01
 eta.ic.expression.region0        = "0.5 + 0.5*tanh((y - 0.5)/eps)"
 
 ### HYDRO PARAM ###
@@ -81,10 +81,12 @@ velocity.ic.expression.region1 = "0.0"
 pressure.ic.type = expression
 pressure.ic.expression.constant.p_L = 100000
 pressure.ic.expression.constant.p_R = 10000
-pressure.ic.expression.region0 = "100000" #"p_L*(x<0) + p_R*(x>0)"
+pressure.ic.expression.region0 = "1" #"p_L*(x<0) + p_R*(x>0)"
 
 solid.density.ic.type = constant
 solid.density.ic.constant.value = 1.0
+solid.pressure.ic.type = constant
+solid.pressure.ic.constant.value = 1.0
 solid.velocity.ic.type = constant
 solid.velocity.ic.constant.value = 0.0 0.0
 solid.momentum.ic.type = constant
@@ -121,5 +123,16 @@ r_refinement_criterion   = 100000.1
 e_refinement_criterion   = 100000.1
 m_refinement_criterion   = 100000.1
 eta_refinement_criterion = 100000.1
+
+
+momentum.bc.type.xhi = neumann
+momentum.bc.type.xlo = neumann
+momentum.bc.type.ylo = neumann
+momentum.bc.type.yhi = neumann
+
+energy.bc.type.xhi = neumann
+energy.bc.type.xlo = neumann
+energy.bc.type.ylo = neumann
+energy.bc.type.yhi = neumann
 
 #TODO
