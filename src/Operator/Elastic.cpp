@@ -148,8 +148,13 @@ Elastic<SYM>::Fapply(int amrlev, int mglev, MultiFab& a_f, const MultiFab& a_u) 
 {
     BL_PROFILE("Operator::Elastic::Fapply()");
 
-    amrex::Box domain(m_geom[amrlev][mglev].Domain());
+    amrex::Box  domain(m_geom[amrlev][mglev].Domain()); // regular domain
+    amrex::Box pdomain(m_geom[amrlev][mglev].Domain()); // periodic domain
     domain.convert(amrex::IntVect::TheNodeVector());
+    pdomain.convert(amrex::IntVect::TheNodeVector());
+
+    amrex::IntVect periodicity = amrex::IntVect(m_geom[amrlev][mglev].isPeriodic());
+    pdomain.grow(periodicity);
 
     const Real* DX = m_geom[amrlev][mglev].CellSize();
 
@@ -163,7 +168,7 @@ Elastic<SYM>::Fapply(int amrlev, int mglev, MultiFab& a_f, const MultiFab& a_u) 
         amrex::Array4<amrex::Real> const& F = a_f.array(mfi);
         amrex::Array4<Set::Scalar> const& psi = m_psi_mf[amrlev][mglev]->array(mfi);
 
-        const Dim3 lo = amrex::lbound(domain), hi = amrex::ubound(domain);
+        const Dim3 lo = amrex::lbound(pdomain), hi = amrex::ubound(pdomain);
 
         amrex::ParallelFor(tilebox, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
 
@@ -178,7 +183,7 @@ Elastic<SYM>::Fapply(int amrlev, int mglev, MultiFab& a_f, const MultiFab& a_u) 
 
             // Determine if a special stencil will be necessary for first derivatives
             std::array<Numeric::StencilType, AMREX_SPACEDIM>
-                sten = Numeric::GetStencil(i, j, k, domain);
+                sten = Numeric::GetStencil(i, j, k, pdomain);
 
             // The displacement gradient tensor
             Set::Matrix gradu; // gradu(i,j) = u_{i,j)
@@ -273,8 +278,14 @@ Elastic<SYM>::Diagonal(int amrlev, int mglev, MultiFab& a_diag)
 {
     BL_PROFILE("Operator::Elastic::Diagonal()");
 
-    amrex::Box domain(m_geom[amrlev][mglev].Domain());
+    amrex::Box  domain(m_geom[amrlev][mglev].Domain()); // regular domain
+    amrex::Box pdomain(m_geom[amrlev][mglev].Domain()); // periodic domain
     domain.convert(amrex::IntVect::TheNodeVector());
+    pdomain.convert(amrex::IntVect::TheNodeVector());
+
+    amrex::IntVect periodicity = amrex::IntVect(m_geom[amrlev][mglev].isPeriodic());
+    pdomain.grow(periodicity);
+
     const Real* DX = m_geom[amrlev][mglev].CellSize();
 
     for (MFIter mfi(a_diag, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
@@ -286,7 +297,7 @@ Elastic<SYM>::Diagonal(int amrlev, int mglev, MultiFab& a_diag)
         amrex::Array4<Set::Scalar> const& diag = a_diag.array(mfi);
         amrex::Array4<Set::Scalar> const& psi = m_psi_mf[amrlev][mglev]->array(mfi);
 
-        const Dim3 lo = amrex::lbound(domain), hi = amrex::ubound(domain);
+        const Dim3 lo = amrex::lbound(pdomain), hi = amrex::ubound(pdomain);
 
         amrex::ParallelFor(tilebox, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
 
@@ -731,6 +742,8 @@ Elastic<SYM>::averageDownCoeffsSameAmrLevel(int amrlev)
         MultiTab& crse = *m_ddw_mf[amrlev][mglev];
         MultiTab& fine = *m_ddw_mf[amrlev][mglev - 1];
 
+        FillBoundaryCoeff(fine, m_geom[amrlev][mglev]);
+
         amrex::BoxArray crseba = crse.boxArray();
         amrex::BoxArray fineba = fine.boxArray();
 
@@ -739,6 +752,7 @@ Elastic<SYM>::averageDownCoeffsSameAmrLevel(int amrlev)
         MultiTab fine_on_crseba;
         fine_on_crseba.define(newba, crse.DistributionMap(), 1, 4);
         fine_on_crseba.ParallelCopy(fine, 0, 0, 1, 2, 4, m_geom[amrlev][mglev].periodicity());
+        FillBoundaryCoeff(fine_on_crseba, m_geom[amrlev][mglev]);
 
         for (MFIter mfi(crse, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
@@ -798,7 +812,20 @@ Elastic<SYM>::averageDownCoeffsSameAmrLevel(int amrlev)
                     fdata(i, j, k) / 8.0;
 
 #ifdef AMREX_DEBUG
-                if (cdata(I, J, K).contains_nan()) Util::Abort(INFO, "restricted model is nan at crse coordinates (I=", I, ",J=", J, ",K=", k, "), amrlev=", amrlev, " interpolating from mglev", mglev - 1, " to ", mglev);
+                if (cdata(I, J, K).contains_nan())
+                {
+                    Util::Message(INFO,fdata(i,j,k));
+                    Util::Message(INFO,fdata(i-1,j-1,k));
+                    Util::Message(INFO,fdata(i-1,j  ,k));
+                    Util::Message(INFO,fdata(i-1,j+1,k));
+                    Util::Message(INFO,fdata(i  ,j-1,k));
+                    Util::Message(INFO,fdata(i  ,j  ,k));
+                    Util::Message(INFO,fdata(i  ,j+1,k));
+                    Util::Message(INFO,fdata(i+1,j-1,k));
+                    Util::Message(INFO,fdata(i+1,j  ,k));
+                    Util::Message(INFO,fdata(i+1,j+1,k));
+                    Util::Abort(INFO, "restricted model is nan at crse coordinates (I=", I, ",J=", J, ",K=", k, "), amrlev=", amrlev, " interpolating from mglev", mglev - 1, " to ", mglev);
+                }
 #endif
             });
         }
