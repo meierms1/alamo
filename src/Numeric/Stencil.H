@@ -182,6 +182,17 @@ struct Stencil<T, 2, 0, 0>
         else
             return 0.0 * f(i, j, k, m); // TODO this is not a great way to do this
     };
+    AMREX_FORCE_INLINE
+        static T Dweight(const amrex::Array4<const T>& f, Set::Scalar& H,
+            const int& i, const int& j, const int& k, const int& m,
+            const Set::Scalar dx[AMREX_SPACEDIM],
+            std::array<StencilType, AMREX_SPACEDIM> stencil = DefaultType)
+    {
+        if (stencil[0] == StencilType::Central)
+            return H * (f(i + 1, j, k, m) - 2.0 * f(i, j, k, m) + f(i - 1, j, k, m)) / dx[0] / dx[0];
+        else
+            return 0.0 * f(i, j, k, m); // TODO this is not a great way to do this
+    };
 };
 
 template<class T>
@@ -195,6 +206,17 @@ struct Stencil<T, 0, 2, 0>
     {
         if (stencil[1] == StencilType::Central)
             return (f(i, j + 1, k, m) - 2.0 * f(i, j, k, m) + f(i, j - 1, k, m)) / dx[1] / dx[1];
+        else
+            return 0.0 * f(i, j, k, m); // TODO this is not a great way to do this
+    };
+    AMREX_FORCE_INLINE
+        static T Dweight(const amrex::Array4<const T>& f, Set::Scalar& H,
+            const int& i, const int& j, const int& k, const int& m,
+            const Set::Scalar dx[AMREX_SPACEDIM],
+            std::array<StencilType, AMREX_SPACEDIM> stencil = DefaultType)
+    {
+        if (stencil[1] == StencilType::Central)
+            return H * (f(i, j + 1, k, m) - 2.0 * f(i, j, k, m) + f(i, j - 1, k, m)) / dx[1] / dx[1];
         else
             return 0.0 * f(i, j, k, m); // TODO this is not a great way to do this
     };
@@ -214,7 +236,19 @@ struct Stencil<T, 0, 0, 2>
         else
             return 0.0 * f(i, j, k, m); // TODO this is not a great way to do this
     };
+    AMREX_FORCE_INLINE
+        static T Dweight(const amrex::Array4<const T>& f, Set::Scalar& H,
+            const int& i, const int& j, const int& k, const int& m,
+            const Set::Scalar dx[AMREX_SPACEDIM],
+            std::array<StencilType, AMREX_SPACEDIM> stencil = DefaultType)
+    {
+        if (stencil[2] == StencilType::Central)
+            return H * (f(i, j, k + 1, m) - 2.0 * f(i, j, k, m) + f(i, j, k - 1, m)) / dx[2] / dx[2];
+        else
+            return 0.0 * f(i, j, k, m); // TODO this is not a great way to do this
+    };
 };
+
 
 template<class T>
 struct Stencil<T, 1, 1, 0>
@@ -536,6 +570,23 @@ Laplacian(const amrex::Array4<const Set::Scalar>& f,
     ret += (Numeric::Stencil<Set::Scalar, 0, 2, 0>::D(f, i, j, k, m, dx));
 #if AMREX_SPACEDIM > 2
     ret += (Numeric::Stencil<Set::Scalar, 0, 0, 2>::D(f, i, j, k, m, dx));
+#endif
+#endif
+    return ret;
+}
+
+AMREX_FORCE_INLINE
+Set::Scalar
+Laplacian(const amrex::Array4<const Set::Scalar>& f, Set::Scalar& H,
+    const int& i, const int& j, const int& k, const int& m,
+    const Set::Scalar dx[AMREX_SPACEDIM])
+{
+    Set::Scalar ret = 0.0;
+    ret += (Numeric::Stencil<Set::Scalar, 2, 0, 0>::Dweight(f, H, i, j, k, m, dx));
+#if AMREX_SPACEDIM > 1
+    ret += (Numeric::Stencil<Set::Scalar, 0, 2, 0>::Dweight(f, H, i, j, k, m, dx));
+#if AMREX_SPACEDIM > 2
+    ret += (Numeric::Stencil<Set::Scalar, 0, 0, 2>::Dweight(f, H, i, j, k, m, dx));
 #endif
 #endif
     return ret;
