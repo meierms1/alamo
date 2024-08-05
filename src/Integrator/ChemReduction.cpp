@@ -33,6 +33,7 @@ ChemReduction::Parse(ChemReduction& value, IO::ParmParse& pp)
             pp.query_required("molar_volume", value.V); // Domain molar volume 
             pp.query_required("temperature", value.T); // Domain temperature (Isothermal)
             pp.query_default("gas_constant", value.R, 8.3145); // Universal gas constant
+            pp.query_required("reaction_constant", value.RC); // Reaction Constant
 
             pp.query_default("refinement_criterion", value.phi_refinement_criterion, 0.001); // Criterion for mesh refinement
             pp.query_default("ghost_cells_count", value.ghost_count, 2); // Number of ghost cells in each field
@@ -67,9 +68,12 @@ ChemReduction::Parse(ChemReduction& value, IO::ParmParse& pp)
         } // End Parse Properties
 
         { // Allen-Cahn (Non-Conserved) fields
-            value.RegisterNewFab(value.phi_g_mf, value.bc_phi, 1, value.ghost_count + 1, "phiGas", true);
-            value.RegisterNewFab(value.phi_f_mf, value.bc_phi, 1, value.ghost_count + 1, "phiFerrite", true);
-            value.RegisterNewFab(value.phi_w_mf, value.bc_phi, 1, value.ghost_count + 1, "phiWustite", true);
+            value.RegisterNewFab(value.phi_g_mf, value.bc_phi, 1, value.ghost_count, "phiGas", true);
+            value.RegisterNewFab(value.phi_f_mf, value.bc_phi, 1, value.ghost_count, "phiFerrite", true);
+            value.RegisterNewFab(value.phi_w_mf, value.bc_phi, 1, value.ghost_count, "phiWustite", true);
+
+            value.RegisterNewFab(value.phi_fo_mf, value.bc_phi, 1, value.ghost_count, "phiFerrite_old", false);
+            value.RegisterNewFab(value.phi_wo_mf, value.bc_phi, 1, value.ghost_count, "phiWustite_old", false);
 
             std::string phi_bc_str = "constant";
             pp.query("pf.phi.ic.type", phi_bc_str); // phi boundary condition [constant, expression]
@@ -86,9 +90,13 @@ ChemReduction::Parse(ChemReduction& value, IO::ParmParse& pp)
         } // End Allen-Cahn Register Fab
 
         { // Cahn-Hillard (Conserved) fields
-            value.RegisterNewFab(value.chi_o_mf, value.bc_chi, 1, value.ghost_count + 1, "chiOxygen", true);
-            value.RegisterNewFab(value.chi_w_mf, value.bc_chi, 1, value.ghost_count + 1, "chiWater", true);
-            value.RegisterNewFab(value.chi_h_mf, value.bc_chi, 1, value.ghost_count + 1, "chiHydrogen", true);
+            value.RegisterNewFab(value.chi_o_mf, value.bc_chi, 1, value.ghost_count, "chiOxygen", true);
+            value.RegisterNewFab(value.chi_w_mf, value.bc_chi, 1, value.ghost_count, "chiWater", true);
+            value.RegisterNewFab(value.chi_h_mf, value.bc_chi, 1, value.ghost_count, "chiHydrogen", true);
+
+            value.RegisterNewFab(value.chi_oo_mf, value.bc_chi, 1, value.ghost_count, "chiOxygen_old", false);
+            value.RegisterNewFab(value.chi_wo_mf, value.bc_chi, 1, value.ghost_count, "chiWater_old", false);
+            value.RegisterNewFab(value.chi_ho_mf, value.bc_chi, 1, value.ghost_count, "chiHydrogen_old", false);
 
             std::string chi_bc_str = "constant";
             pp.query("pf.chi.ic.type", chi_bc_str); // chi boundary condition [constant, expression]
@@ -127,6 +135,7 @@ void ChemReduction::Initialize(int lev)
 
         ic_chi->Initialize(lev, chi_h_mf, chi_o_mf, chi_w_mf);
         //ic_chi->Initialize(lev, chi_h_old_mf, chi_o_old_mf, chi_fe_old_mf);
+        
     } // End BL_PROFILE
 } // End Initialize Function
 
@@ -136,6 +145,13 @@ void ChemReduction::Advance(int lev, Set::Scalar time, Set::Scalar dt)
     {
         const Set::Scalar* DX = geom[lev].CellSize();
 
+        std::swap(phi_f_mf[lev], phi_fo_mf[lev]);
+        std::swap(phi_w_mf[lev], phi_wo_mf[lev]);
+
+        std::swap(chi_h_mf[lev], chi_ho_mf[lev]);
+        std::swap(chi_o_mf[lev], chi_oo_mf[lev]);
+        std::swap(chi_wo_mf[lev], chi_wo_mf[lev]);
+
         // Free Energy Functions
         Numeric::Function::Polynomial<4> f_f(-40372, -36.031, 90.573, -182.51, 163.708);
         Numeric::Function::Polynomial<2> f_w(41.953, -213.46, 173.263);
@@ -144,21 +160,60 @@ void ChemReduction::Advance(int lev, Set::Scalar time, Set::Scalar dt)
         Numeric::Function::Polynomial<5> p(0., 0., 0., 10., -15., 6.);
         Numeric::Function::Polynomial<4> g(0., 0., 1., -2., 1.);
 
+        Numeric::Function::Polynomial<5> dp(0., 0., 0., 10., -15., 6.);
+        Numeric::Function::Polynomial<4> dg(0., 0., 1., -2., 1.);
+
         for (amrex::MFIter mfi(*phi_f_mf[lev], true); mfi.isValid(); ++mfi)
         {
             const amrex::Box& bx = mfi.tilebox();
 
+            amrex::Array4<Set::Scalar> const& phiF = (*phi_f_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& phiW = (*phi_w_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& phiG = (*phi_g_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& phiFo = (*phi_fo_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& phiWo = (*phi_wo_mf[lev]).array(mfi);
+
+            amrex::Array4<Set::Scalar> const& chiO = (*chi_o_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& chiH = (*chi_h_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& chiW = (*chi_w_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& chiOo = (*chi_oo_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& chiHo = (*chi_ho_mf[lev]).array(mfi);
+            amrex::Array4<Set::Scalar> const& chiWo = (*chi_wo_mf[lev]).array(mfi);
+
             // Parallel Loop for Cahn-Hillard Fields
             amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
-                p(1.);
+                Set::Scalar lap_chiH = Numeric::Laplacian(chiHo, ferrite.D.H, i, j, k, 0, DX);
+                Set::Scalar lap_chiW = Numeric::Laplacian(chiWo, ferrite.D.W, i, j, k, 0, DX);
+                Set::Scalar lap_chiO = Numeric::Laplacian(chiOo, ferrite.D.O, i, j, k, 0, DX);
+
+                Set::Scalar kfor = g(phiG(i,j,k)) * RC *chiOo(i,j,k)*chiHo(i,j,k);
+
+                chiH(i,j,k) = chiHo(i,j,k) - dt * (lap_chiH - 2*kfor);
+                chiO(i,j,k) = chiOo(i,j,k) - dt * (lap_chiO - kfor);
+                chiW(i,j,k) = chiWo(i,j,k) - dt * (lap_chiW + kfor);
             });
 
             // Parallel Loop for Allen-Cahn Fields
-            amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-            {
-                g(1.);
-            });
+            { 
+                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                {
+                    Set::Scalar df_divf = Numeric::Laplacian(phiW, ferrite.E.G, i, j, k, 0, DX) - Numeric::Laplacian(phiG,gas.E.G, i, j, k, 0, DX);    
+                    Set::Scalar df_divw = Numeric::Laplacian(phiW, wustite.E.G, i, j, k, 0, DX) - Numeric::Laplacian(phiG,gas.E.G, i, j, k, 0, DX);
+
+                    Set::Scalar eta = p(phiFo(i,j,k)) * f_f(chiOo(i,j,k)) + p(phiG(i,j,k)) * f_w(chiOo(i,j,k)); // eta_h(chiH) + eta_w(chiW)
+                    Set::Scalar df_dphif = eta * ( dp(phiFo(i,j,k)) - dp(phiG(i,j,k)) ) + dg(phiFo(i,j,k)) * ferrite.E.B - dg(phiG(i,j,k)) * gas.E.B;
+                    Set::Scalar df_dphiw = eta * ( dp(phiWo(i,j,k)) - dp(phiG(i,j,k)) ) + dg(phiWo(i,j,k)) * ferrite.E.B - dg(phiG(i,j,k)) * gas.E.B;
+
+                    phiF(i,j,k) = phiFo(i,j,k) + dt * ferrite.L * (df_divf - df_dphif);
+                    phiW(i,j,k) = phiWo(i,j,k) + dt * wustite.L * (df_divw - df_dphiw);
+                });
+
+                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                {
+                    phiG(i,j,k) = 1.0 - phiF(i,j,k) - phiW(i,j,k);
+                });
+            }
         }// End For Loop
     } // End BL_PROFILE
 } //Function

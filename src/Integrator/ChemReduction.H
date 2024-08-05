@@ -51,6 +51,13 @@ private:
     Set::Field<Set::Scalar> chi_h_mf; // Hydrogen Field
     Set::Field<Set::Scalar> chi_w_mf; // Water Field
 
+    Set::Field<Set::Scalar> phi_fo_mf; // Ferrite Field (old)
+    Set::Field<Set::Scalar> phi_wo_mf; // Wustite Field (old)
+
+    Set::Field<Set::Scalar> chi_oo_mf; // Oxygen Field (old)
+    Set::Field<Set::Scalar> chi_ho_mf; // Hydrogen Field (old)
+    Set::Field<Set::Scalar> chi_wo_mf; // Water Field (old)
+
     Set::Scalar phi_refinement_criterion;
 
     BC::BC<Set::Scalar>* bc_phi = nullptr;
@@ -63,6 +70,7 @@ private:
     Set::Scalar V; // Total Domain Molar Volume
     Set::Scalar R; // Universal Gas Constant
     Set::Scalar T; // Domain Temperature (Isothermal)
+    Set::Scalar RC; // Reaction Constant
 
     struct {
         Set::Scalar G; // Shear Modulli 
