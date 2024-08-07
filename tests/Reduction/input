@@ -1,0 +1,67 @@
+alamo.program = chemreduction
+plot_file = output
+amr.plot_dt = 0.01
+amr.max_level = 4
+amr.n_cell = 200 200 200
+amr.blocking_factor = 2
+amr.regrid_int = 100
+amr.base_regrid_int = 20
+amr.grid_eff = 0.7
+
+geometry.prob_lo = -0.1 -0.1 -0.1 # [mm]
+geometry.prob_hi = 0.1 0.1 0.1 # [mm]
+geometry.is_periodic = 1 1 1
+
+timestep = 0.0001 # [s]
+stop_time = 0.5 # [s]
+
+molar_volume = 1.224e-5
+temperature = 900
+reaction_constant = 4.5e4
+
+phi.ic.cahnhillard.field.type = phase
+phi.ic.cahnhillard.radius = 0.01
+phi.ic.cahnhillard.center = 0.0 0.0 0.0 
+phi.ic.cahnhillard.eps = 0.001
+
+pf.phi.bc.type.xlo = periodic
+pf.phi.bc.type.xhi = periodic
+pf.phi.bc.type.ylo = periodic
+pf.phi.bc.type.yhi = periodic
+
+chi.ic.cahnhillard.field.type = concentration
+chi.ic.cahnhillard.radius = 0.01
+chi.ic.cahnhillard.center = 0.0 0.0 0.0
+chi.ic.cahnhillard.eps = 0.001
+
+pf.chi.bc.type.xlo = periodic
+pf.chi.bc.type.xhi = periodic
+pf.chi.bc.type.ylo = periodic
+pf.chi.bc.type.yhi = periodic
+
+wustite.bulk = 88
+wustite.shear = 24
+wustite.mobility = 1.5e-10
+wustite.diffusivity.oxygen = 2.16e-11
+wustite.diffusivity.hydrogen = 2.5e-11
+wustite.diffusivity.water = 2.5e-20
+wustite.energy.gradient = 4.0e-5
+wustite.energy.barrier = 1.0e3
+
+ferrite.bulk = 85
+ferrite.shear = 24
+ferrite.mobility = 1.5e-10
+ferrite.diffusivity.oxygen = 2.16e-11
+ferrite.diffusivity.hydrogen = 2.5e-11
+ferrite.diffusivity.water = 2.5e-20
+ferrite.energy.gradient = 4.0e-5
+ferrite.energy.barrier = 1.0e3
+
+gas.bulk = 0.17
+gas.shear = 0.082
+gas.mobility = 1.5e-10
+gas.diffusivity.oxygen = 1.0e-9
+gas.diffusivity.hydrogen = 1.0e-9
+gas.diffusivity.water = 1.0e-9
+gas.energy.gradient = 4.0e-5
+gas.energy.barrier = 1.0e3
