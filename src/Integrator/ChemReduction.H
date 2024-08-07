@@ -8,14 +8,10 @@
 #include "Integrator/Integrator.H"
 #include "BC/BC.H"
 #include "BC/Operator/Elastic/Constant.H"
-#include "IC/Voronoi.H"
-#include "IC/IC.H"
-#include "IC/Wedge.H"
-#include "IC/Constant.H"
-#include "IC/Expression.H"
-#include "IC/PSRead.H" 
 #include "Set/Set.H"
 #include "IO/ParmParse.H"
+#include "IC/IC.H"
+#include "IC/CahnHillardMixture.H"
 
 namespace Integrator
 {
@@ -43,20 +39,11 @@ protected:
     void Regrid(int lev, Set::Scalar time) override;
 private:
 
-    Set::Field<Set::Scalar> phi_f_mf; // Ferrite Field
-    Set::Field<Set::Scalar> phi_w_mf; // Wustite Field
-    Set::Field<Set::Scalar> phi_g_mf; // Water/Gas Field
+    Set::Field<Set::Scalar> phi_mf; // Phase Field
+    Set::Field<Set::Scalar> chi_mf; // Concentration Field (old)
 
-    Set::Field<Set::Scalar> chi_o_mf; // Oxygen Field
-    Set::Field<Set::Scalar> chi_h_mf; // Hydrogen Field
-    Set::Field<Set::Scalar> chi_w_mf; // Water Field
-
-    Set::Field<Set::Scalar> phi_fo_mf; // Ferrite Field (old)
-    Set::Field<Set::Scalar> phi_wo_mf; // Wustite Field (old)
-
-    Set::Field<Set::Scalar> chi_oo_mf; // Oxygen Field (old)
-    Set::Field<Set::Scalar> chi_ho_mf; // Hydrogen Field (old)
-    Set::Field<Set::Scalar> chi_wo_mf; // Water Field (old)
+    Set::Field<Set::Scalar> phi_o_mf; // Phase Field (old)
+    Set::Field<Set::Scalar> chi_o_mf; // Concentration Field (old)
 
     Set::Scalar phi_refinement_criterion;
 
