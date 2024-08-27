@@ -6,8 +6,6 @@
 
 To compile Alamo on Windows, use the `Windows Subsystem for Linux <https://learn.microsoft.com/en-us/windows/wsl/install>`_ and install Ubuntu.
 
-Once you have WSL working, follow the instructions for installing on :ref:`install_ubuntu`.
-
 1. Open Terminal \
 
 2. Type the command and press <Enter>: \
@@ -18,4 +16,4 @@ Once you have WSL working, follow the instructions for installing on :ref:`insta
    
 3. Restart your computer: After installation, you'll be prompted to restart your computer. Do so to complete the installation. \
 
-
+Once you have WSL working, follow the instructions for installing on :ref:`install_ubuntu`.
